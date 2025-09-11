@@ -201,21 +201,22 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
       {/* Main Video Area */}
       <div className="flex-1 flex flex-col">
         {/* Video Feeds - Updated Layout */}
-        <div className="flex-1 p-4 relative">
-          {/* Main Remote Video */}
-          <div className="w-full h-full bg-gray-800 rounded-lg relative overflow-hidden">
+        <div className="flex-1 p-2 relative">
+          {/* Main Remote Video - Full Screen */}
+          <div className="w-full h-full bg-gray-900 rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <User className="h-20 w-20 mx-auto mb-4 opacity-50" />
-                <p className="text-lg opacity-75">
+                <User className="h-24 w-24 mx-auto mb-4 opacity-50" />
+                <p className="text-xl opacity-75">
                   {userRole === 'doctor' ? 'Patient Video' : 'Doctor Video'}
                 </p>
+                <p className="text-sm opacity-50 mt-2">Video feed will appear here</p>
               </div>
             </div>
           </div>
 
           {/* Local Video - Floating in corner */}
-          <div className="absolute top-8 right-8 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20">
+          <div className="absolute top-6 right-6 w-56 h-40 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
             {!isVideoOff ? (
               <video
                 ref={localVideoRef}
@@ -233,7 +234,7 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
               </div>
             )}
             <div className="absolute bottom-2 left-2">
-              <Badge variant="secondary" className="bg-black/50 text-white text-xs">
+              <Badge variant="secondary" className="bg-black/70 text-white text-xs px-2 py-1">
                 You
               </Badge>
             </div>
