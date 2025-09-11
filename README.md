@@ -1,73 +1,110 @@
-# Welcome to your Lovable project
+# 🏥 Nabha – Community Healthcare App
 
-## Project info
+## 🎯 Purpose
+A healthcare solution for **uneducated people** or those who **don’t have access to the internet**, providing **offline toll-free access** and **AI-powered multilingual healthcare assistance**.
 
-**URL**: https://lovable.dev/projects/294561b6-8009-4f28-a935-d4494dc9904d
+---
 
-## How can I edit this code?
+## 🌟 Core Features
 
-There are several ways of editing your application.
+### 👨‍⚕️ Healthcare Services
+- **Symptom Checker (AI + Multilingual)**
+- **Image Checker (AI)** for visible health issues
+- **AI-powered precaution guidance**
+- **Doctor Rating System**
+- **Appointment Booking System**
+- **Payment System** (UPI, Wallet, Cards)
 
-**Use Lovable**
+### 📡 Community Access
+- Toll-free **offline integration**
+- **Localized multilingual support** for rural/low-internet regions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/294561b6-8009-4f28-a935-d4494dc9904d) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📱 App Modules
 
-**Use your preferred IDE**
+- **Authentication Page** → Secure login/signup  
+- **Dashboard** → Overview of health status, upcoming appointments, alerts  
+- **Appointment Page** → Book/manage appointments with doctors  
+- **Chat Functionality** → AI chatbot + doctor chat  
+- **Documents Page** → Upload/download prescriptions & reports  
+- **Settings** → Checkboxes for user preferences (dark mode, notifications, reminders, etc.)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🎨 UI / UX Improvements
+- Resize video size (better for telehealth calls/tutorials)  
+- Increase chat message box size for better usability  
+- Redesigned appointment page  
+- Document management for prescriptions/reports  
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## ✅ Development Checklist
+- [ ] Dashboard  
+- [ ] Authentication Page  
+- [ ] Appointment Management  
+- [ ] Chat Functionality  
+- [ ] Symptom Checker (AI)  
+- [ ] Image Checker (AI)  
+- [ ] Multilingual Support  
+- [ ] Offline Toll-Free Integration  
+- [ ] Document Storage  
+- [ ] Doctor Rating System  
+- [ ] Payment System  
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🛠️ Tech Stack (Proposed)
+- **Frontend:** React Native / Flutter  
+- **Backend:** Node.js / Django / FastAPI  
+- **Database:** PostgreSQL / MongoDB  
+- **AI Models:** Python (TensorFlow / PyTorch)  
+- **Offline Access:** Toll-free number integration (IVR system)  
+- **Cloud Storage:** AWS S3 / Firebase Storage  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 🚀 How to Run Locally
+```bash
+# Clone the repo
+git clone https://github.com/<your-username>/nabha-healthcare.git
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Move into project directory
+cd nabha-healthcare
 
-**Use GitHub Codespaces**
+# Install dependencies
+npm install   # or yarn install
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Start the app
+npm start
+📌 Roadmap
+ MVP with Symptom Checker + Appointment System
 
-## What technologies are used for this project?
+ Add AI-based Image Checker
 
-This project is built with:
+ Enable Offline Toll-Free Access
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+ Launch Multilingual Support (Hindi, Punjabi, English, etc.)
 
-## How can I deploy this project?
+🤝 Contributing
+Pull requests are welcome!
+Please open an issue first to discuss what you would like to change.
 
-Simply open [Lovable](https://lovable.dev/projects/294561b6-8009-4f28-a935-d4494dc9904d) and click on Share -> Publish.
+📜 License
+This project is licensed under the MIT License – see the LICENSE file for details.
 
-## Can I connect a custom domain to my Lovable project?
+yaml
+Copy code
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+👉 Do you want me to also add a **diagram (system architecture)** inside this README (with AI + Doctors + Offline + App flow) so it looks more professional on GitHub?
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+
+
+
+
+
+Ask ChatGPT
