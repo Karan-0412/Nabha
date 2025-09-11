@@ -65,7 +65,7 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">Waiting Patients</h2>
-              <p className="text-muted-foreground">{waitingPatients.length} patients waiting for consultation</p>
+              <p className="text-muted-foreground">{waitingPatients.length} patients waiting for appointments</p>
             </div>
             <Badge variant="secondary" className="bg-warning/10 text-warning">
               {waitingPatients.length} Waiting
@@ -113,7 +113,7 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
                 </div>
                 <CardTitle className="text-xl mb-2">No patients waiting</CardTitle>
                 <CardDescription>
-                  New patient requests will appear here automatically
+                  New patient appointment requests will appear here automatically
                 </CardDescription>
               </CardContent>
             </Card>

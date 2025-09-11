@@ -79,7 +79,7 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
   };
 
   return (
-    <div className="h-screen bg-video-bg flex">
+    <div className="h-full bg-video-bg flex">
       {/* Left Sidebar - Patient Information */}
       <div className="w-80 bg-medical-sidebar border-r flex flex-col">
         {/* Patient Information */}
@@ -161,18 +161,18 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
           </CardContent>
         </Card>
 
-        {/* Messages */}
-        <Card className="mx-4 flex-1 flex flex-col">
+        {/* Messages - Resized */}
+        <Card className="mx-4 flex-1 flex flex-col min-h-[200px]">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Messages</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Chat</CardTitle>
               <Button variant="outline" size="sm" className="h-6 px-2 text-xs">
-                Message Templates
+                Templates
               </Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col">
-            <div className="flex-1 space-y-2 mb-3 max-h-32 overflow-y-auto">
+            <div className="flex-1 space-y-2 mb-3 overflow-y-auto min-h-[120px]">
               {messages.map((msg, index) => (
                 <div key={index} className={`text-xs p-2 rounded ${
                   msg.sender === 'doctor' ? 'bg-primary/10 ml-4' : 'bg-muted mr-4'
@@ -182,7 +182,7 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
                 </div>
               ))}
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 mt-auto">
               <Input 
                 placeholder="Type a message..."
                 value={message}
@@ -200,22 +200,22 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
 
       {/* Main Video Area */}
       <div className="flex-1 flex flex-col">
-        {/* Video Feeds */}
-        <div className="flex-1 p-4 grid grid-cols-2 gap-4">
-          {/* Remote Video */}
-          <div className="bg-gray-800 rounded-lg relative overflow-hidden">
+        {/* Video Feeds - Updated Layout */}
+        <div className="flex-1 p-4 relative">
+          {/* Main Remote Video */}
+          <div className="w-full h-full bg-gray-800 rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <User className="h-16 w-16 mx-auto mb-2 opacity-50" />
-                <p className="text-sm opacity-75">
+                <User className="h-20 w-20 mx-auto mb-4 opacity-50" />
+                <p className="text-lg opacity-75">
                   {userRole === 'doctor' ? 'Patient Video' : 'Doctor Video'}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Local Video */}
-          <div className="bg-gray-800 rounded-lg relative overflow-hidden">
+          {/* Local Video - Floating in corner */}
+          <div className="absolute top-8 right-8 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20">
             {!isVideoOff ? (
               <video
                 ref={localVideoRef}
@@ -227,13 +227,13 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-white">
-                  <VideoOff className="h-16 w-16 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm opacity-75">Camera Off</p>
+                  <VideoOff className="h-8 w-8 mx-auto mb-1 opacity-50" />
+                  <p className="text-xs opacity-75">Camera Off</p>
                 </div>
               </div>
             )}
-            <div className="absolute bottom-4 left-4">
-              <Badge variant="secondary" className="bg-black/50 text-white">
+            <div className="absolute bottom-2 left-2">
+              <Badge variant="secondary" className="bg-black/50 text-white text-xs">
                 You
               </Badge>
             </div>

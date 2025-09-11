@@ -29,9 +29,9 @@ const PatientDashboard = ({ onRequestConsultation, onBack }: PatientDashboardPro
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <Video className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">Request a Consultation</CardTitle>
+              <CardTitle className="text-2xl">Request an Appointment</CardTitle>
               <CardDescription>
-                Connect with a healthcare professional for immediate medical assistance
+                Schedule a consultation with a healthcare professional
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -40,7 +40,7 @@ const PatientDashboard = ({ onRequestConsultation, onBack }: PatientDashboardPro
                 size="lg" 
                 className="bg-primary hover:bg-primary-hover text-primary-foreground px-8 py-3"
               >
-                Start Consultation
+                Start Appointment Request
               </Button>
             </CardContent>
           </Card>
