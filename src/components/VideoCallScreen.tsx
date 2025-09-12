@@ -17,6 +17,7 @@ import {
   Send
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface VideoCallScreenProps {
   patientId: string;
@@ -182,15 +183,21 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
                 </div>
               ))}
             </div>
-            <div className="flex space-x-2 mt-auto">
-              <Input 
-                placeholder="Type a message..."
+            <div className="flex items-end space-x-2 mt-auto">
+              <Textarea
+                placeholder="Type a message (Shift+Enter for new line)..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                className="text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                rows={3}
+                className="text-sm resize-none min-h-24 max-h-40"
               />
-              <Button size="sm" onClick={sendMessage}>
+              <Button size="sm" onClick={sendMessage} className="self-end">
                 <Send className="h-3 w-3" />
               </Button>
             </div>
@@ -201,7 +208,7 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
       {/* Main Video Area */}
       <div className="flex-1 flex flex-col">
         {/* Video Feeds - Updated Layout */}
-        <div className="flex-1 p-2 relative">
+        <div className="flex-1 p-0 relative">
           {/* Main Remote Video - Full Screen */}
           <div className="w-full h-full bg-gray-900 rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center">
