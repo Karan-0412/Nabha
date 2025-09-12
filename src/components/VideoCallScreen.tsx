@@ -183,7 +183,7 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
                 </div>
               ))}
             </div>
-            <div className="flex items-end space-x-2 mt-auto">
+            <div className="flex items-end space-x-3 mt-auto">
               <Textarea
                 placeholder="Type a message (Shift+Enter for new line)..."
                 value={message}
@@ -194,11 +194,11 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
                     sendMessage();
                   }
                 }}
-                rows={3}
-                className="text-sm resize-none min-h-24 max-h-40"
+                rows={4}
+                className="text-sm resize-none min-h-28 max-h-48 flex-1"
               />
-              <Button size="sm" onClick={sendMessage} className="self-end">
-                <Send className="h-3 w-3" />
+              <Button size="default" onClick={sendMessage} className="self-end px-4 py-2">
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </CardContent>
@@ -208,22 +208,20 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
       {/* Main Video Area */}
       <div className="flex-1 flex flex-col">
         {/* Video Feeds - Updated Layout */}
-        <div className="flex-1 p-0 relative">
+        <div className="flex-1 relative overflow-hidden">
           {/* Main Remote Video - Full Screen */}
-          <div className="w-full h-full bg-gray-900 rounded-lg relative overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-                <User className="h-24 w-24 mx-auto mb-4 opacity-50" />
-                <p className="text-xl opacity-75">
-                  {userRole === 'doctor' ? 'Patient Video' : 'Doctor Video'}
-                </p>
-                <p className="text-sm opacity-50 mt-2">Video feed will appear here</p>
-              </div>
+          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+            <div className="text-center text-white">
+              <User className="h-32 w-32 mx-auto mb-6 opacity-50" />
+              <p className="text-2xl opacity-75 mb-2">
+                {userRole === 'doctor' ? 'Patient Video' : 'Doctor Video'}
+              </p>
+              <p className="text-base opacity-50">Camera will activate when call starts</p>
             </div>
           </div>
 
           {/* Local Video - Floating in corner */}
-          <div className="absolute top-6 right-6 w-56 h-40 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
+          <div className="absolute top-4 right-4 w-64 h-48 bg-gray-800 rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl">
             {!isVideoOff ? (
               <video
                 ref={localVideoRef}
@@ -233,15 +231,15 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
                 className="w-full h-full object-cover transform scale-x-[-1]"
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
                 <div className="text-center text-white">
-                  <VideoOff className="h-8 w-8 mx-auto mb-1 opacity-50" />
-                  <p className="text-xs opacity-75">Camera Off</p>
+                  <VideoOff className="h-10 w-10 mx-auto mb-2 opacity-75" />
+                  <p className="text-sm opacity-90">Camera Off</p>
                 </div>
               </div>
             )}
-            <div className="absolute bottom-2 left-2">
-              <Badge variant="secondary" className="bg-black/70 text-white text-xs px-2 py-1">
+            <div className="absolute bottom-3 left-3">
+              <Badge variant="secondary" className="bg-black/80 text-white text-sm px-3 py-1 rounded-full">
                 You
               </Badge>
             </div>

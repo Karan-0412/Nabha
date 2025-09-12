@@ -3,12 +3,13 @@ import RoleSelection from "@/components/RoleSelection";
 import PatientDashboard from "@/components/PatientDashboard";
 import DoctorDashboard from "@/components/DoctorDashboard";
 import VideoCallScreen from "@/components/VideoCallScreen";
+import AuthPage from "./AuthPage";
 
-type AppState = 'role-selection' | 'patient-dashboard' | 'doctor-dashboard' | 'video-call';
+type AppState = 'auth' | 'role-selection' | 'patient-dashboard' | 'doctor-dashboard' | 'video-call';
 type UserRole = 'patient' | 'doctor' | null;
 
 const Index = () => {
-  const [currentState, setCurrentState] = useState<AppState>('role-selection');
+  const [currentState, setCurrentState] = useState<AppState>('auth');
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
 
@@ -46,6 +47,14 @@ const Index = () => {
     setCurrentState('role-selection');
     setUserRole(null);
   };
+
+  const handleAuthSuccess = () => {
+    setCurrentState('role-selection');
+  };
+
+  if (currentState === 'auth') {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
 
   if (currentState === 'role-selection') {
     return <RoleSelection onRoleSelect={handleRoleSelect} />;

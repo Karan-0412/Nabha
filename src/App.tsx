@@ -10,6 +10,9 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import AppointmentsPage from "./pages/AppointmentsPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import AuthPage from "./pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -29,11 +32,14 @@ const App = () => (
                   <NotificationPanel />
                 </header>
                 <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/appointments" element={<AppointmentsPage />} />
+                  <Route path="/documents" element={<DocumentsPage />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
                 </main>
               </div>
             </div>
