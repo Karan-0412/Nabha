@@ -93,6 +93,24 @@ const AppointmentsPage = () => {
     }
   };
 
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectAptId, setRejectAptId] = useState<string | null>(null);
+
+  const openReject = (aptId: string) => {
+    setRejectAptId(aptId);
+    setRejectReason('');
+    setRejectOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (!rejectAptId) return;
+    rejectAppointment(rejectAptId, rejectReason || undefined);
+    setRejectOpen(false);
+    setRejectAptId(null);
+    setRejectReason('');
+  };
+
   const upcomingAppointments = appointments
     .filter(apt => new Date(apt.scheduledAt) >= new Date())
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
