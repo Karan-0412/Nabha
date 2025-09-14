@@ -1,5 +1,3 @@
-// Local mock store for appointments and calls with localStorage persistence
-
 export type Role = 'patient' | 'doctor';
 
 export type AppointmentStatus = 'confirmed' | 'pending' | 'cancelled';
@@ -29,7 +27,7 @@ export interface Call {
   endedAt?: string | null;   // ISO
 }
 
-interface DoctorAvailability {
+export interface DoctorAvailabilityWindow {
   startHour: number; // 0-23
   endHour: number;   // 0-23
 }
@@ -37,7 +35,7 @@ interface DoctorAvailability {
 interface TelemedDB {
   appointments: Appointment[];
   calls: Call[];
-  doctorAvailability: Record<string, DoctorAvailability>;
+  doctorAvailability: Record<string, DoctorAvailabilityWindow[]>;
   reminderFlags: Record<string, { m60?: boolean; m30?: boolean; m15?: boolean }>;
   shiftReminder: { [doctorId: string]: string | undefined };
   seedVersion: number;
@@ -46,7 +44,7 @@ interface TelemedDB {
 import { addNotification } from "@/store/notificationStore";
 
 const STORAGE_KEY = 'telemed-db-v1';
-const CURRENT_SEED_VERSION = 2;
+const CURRENT_SEED_VERSION = 3;
 
 function nowIso() {
   return new Date().toISOString();
@@ -60,11 +58,22 @@ function readDB(): TelemedDB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedDB();
-    const data = JSON.parse(raw) as TelemedDB;
-    if (!data.seedVersion || data.seedVersion < CURRENT_SEED_VERSION) {
+    const data = JSON.parse(raw) as TelemedDB as any;
+    // Migrations
+    if (!('seedVersion' in data) || (data as any).seedVersion < CURRENT_SEED_VERSION) {
       return seedDB();
     }
-    return data;
+    // Ensure availability is array
+    if (data && data.doctorAvailability) {
+      const fixed: Record<string, DoctorAvailabilityWindow[]> = {};
+      for (const [k, v] of Object.entries<any>(data.doctorAvailability as any)) {
+        if (Array.isArray(v)) fixed[k] = v as DoctorAvailabilityWindow[];
+        else if (v && typeof v === 'object' && 'startHour' in v && 'endHour' in v) fixed[k] = [v as DoctorAvailabilityWindow];
+        else fixed[k] = [{ startHour: 9, endHour: 17 }];
+      }
+      (data as any).doctorAvailability = fixed;
+    }
+    return data as TelemedDB;
   } catch {
     return seedDB();
   }
@@ -110,10 +119,10 @@ function seedDB(): TelemedDB {
 
   const calls: Call[] = [];
 
-  const doctorAvailability: Record<string, DoctorAvailability> = {
-    d1: { startHour: 9, endHour: 17 },
-    d2: { startHour: 10, endHour: 18 },
-    d3: { startHour: 8, endHour: 16 },
+  const doctorAvailability: Record<string, DoctorAvailabilityWindow[]> = {
+    d1: [ { startHour: 9, endHour: 12 }, { startHour: 13, endHour: 17 } ],
+    d2: [ { startHour: 10, endHour: 18 } ],
+    d3: [ { startHour: 8, endHour: 16 } ],
   };
 
   const db: TelemedDB = {
@@ -318,21 +327,64 @@ export function stopIncomingCallSimulation() {
 }
 
 // Availability
-export function getDoctorAvailability(doctorId: string) {
+export function getDoctorAvailabilityWindows(doctorId: string): DoctorAvailabilityWindow[] {
   const db = readDB();
-  return db.doctorAvailability[doctorId] ?? { startHour: 9, endHour: 17 };
+  return db.doctorAvailability[doctorId] ?? [{ startHour: 9, endHour: 17 }];
 }
 
+// Backward-compat helpers (first window)
+export function getDoctorAvailability(doctorId: string) {
+  const windows = getDoctorAvailabilityWindows(doctorId);
+  return windows[0] ?? { startHour: 9, endHour: 17 };
+}
+
+export function setDoctorAvailabilityWindows(doctorId: string, windows: DoctorAvailabilityWindow[]) {
+  const db = readDB();
+  db.doctorAvailability[doctorId] = windows
+    .map(w => ({ startHour: Math.max(0, Math.min(23, Math.floor(w.startHour))), endHour: Math.max(1, Math.min(24, Math.floor(w.endHour))) }))
+    .filter(w => w.endHour > w.startHour);
+  writeDB(db);
+}
+
+export function addDoctorAvailabilityWindow(doctorId: string, startHour: number, endHour: number) {
+  const db = readDB();
+  const arr = db.doctorAvailability[doctorId] ?? [];
+  arr.push({ startHour, endHour });
+  db.doctorAvailability[doctorId] = arr;
+  writeDB(db);
+}
+
+export function updateDoctorAvailabilityWindow(doctorId: string, index: number, startHour: number, endHour: number) {
+  const db = readDB();
+  const arr = db.doctorAvailability[doctorId] ?? [];
+  if (!arr[index]) return;
+  arr[index] = { startHour, endHour };
+  db.doctorAvailability[doctorId] = arr;
+  writeDB(db);
+}
+
+export function removeDoctorAvailabilityWindow(doctorId: string, index: number) {
+  const db = readDB();
+  const arr = db.doctorAvailability[doctorId] ?? [];
+  if (index < 0 || index >= arr.length) return;
+  arr.splice(index, 1);
+  db.doctorAvailability[doctorId] = arr.length ? arr : [{ startHour: 9, endHour: 17 }];
+  writeDB(db);
+}
+
+// Legacy setter updates first window only
 export function setDoctorAvailability(doctorId: string, startHour: number, endHour: number) {
   const db = readDB();
-  db.doctorAvailability[doctorId] = { startHour, endHour };
+  const arr = db.doctorAvailability[doctorId] ?? [];
+  if (arr.length === 0) db.doctorAvailability[doctorId] = [{ startHour, endHour }];
+  else db.doctorAvailability[doctorId][0] = { startHour, endHour };
   writeDB(db);
 }
 
 export function isDoctorAvailableAt(doctorId: string, date: Date) {
-  const a = getDoctorAvailability(doctorId);
+  const windows = getDoctorAvailabilityWindows(doctorId);
   const h = date.getHours();
-  return h >= a.startHour && h < a.endHour;
+  return windows.some(w => h >= w.startHour && h < w.endHour);
 }
 
 export function getReminderFlags() {
