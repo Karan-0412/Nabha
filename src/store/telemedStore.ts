@@ -233,6 +233,18 @@ export function createRingingCall(params: { patientId: string; patientName: stri
   };
   db.calls.push(call);
   writeDB(db);
+  addNotification({
+    type: 'call',
+    title: 'Incoming call',
+    message: `${call.doctorName} is calling ${call.patientName}`,
+    recipient: 'patient',
+  });
+  addNotification({
+    type: 'call',
+    title: 'Outbound call',
+    message: `Calling ${call.patientName}`,
+    recipient: 'doctor',
+  });
   return call;
 }
 
