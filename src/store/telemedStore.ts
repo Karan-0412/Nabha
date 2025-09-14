@@ -110,7 +110,20 @@ function seedDB(): TelemedDB {
 
   const calls: Call[] = [];
 
-  const db: TelemedDB = { appointments, calls, seedVersion: CURRENT_SEED_VERSION };
+  const doctorAvailability: Record<string, DoctorAvailability> = {
+    d1: { startHour: 9, endHour: 17 },
+    d2: { startHour: 10, endHour: 18 },
+    d3: { startHour: 8, endHour: 16 },
+  };
+
+  const db: TelemedDB = {
+    appointments,
+    calls,
+    doctorAvailability,
+    reminderFlags: {},
+    shiftReminder: {},
+    seedVersion: CURRENT_SEED_VERSION,
+  };
   writeDB(db);
   return db;
 }
