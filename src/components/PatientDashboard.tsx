@@ -116,7 +116,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               className="flex-1 bg-transparent outline-none px-3 text-[13px] placeholder:text-muted-foreground/70"
             />
             <div className="flex items-center gap-2 pr-2">
-              <button aria-label="Notifications" className="relative h-8 w-8 rounded-full bg-white/80 shadow-inner flex items-center justify-center">
+              <button aria-label="Notifications" className="relative h-10 w-10 rounded-full bg-neutral-400 shadow-inner flex items-center justify-center">
                 <Bell className="h-4 w-4 text-muted-foreground" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
               </button>
