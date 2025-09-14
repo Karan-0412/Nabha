@@ -184,6 +184,22 @@ const AppointmentsPage = () => {
         </Dialog>
       </div>
 
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <Label>Reason (optional)</Label>
+            <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason for rejecting the appointment" />
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setRejectOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmReject}>Reject</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
