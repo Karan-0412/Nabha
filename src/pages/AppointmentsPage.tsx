@@ -204,9 +204,24 @@ const AppointmentsPage = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge className={getStatusColor(appointment.status)}>
-                          {appointment.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusColor(appointment.status)}>
+                            {appointment.status}
+                          </Badge>
+                          {userRole === 'doctor' && (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                ensureRoom(`patient-${appointment.patientId}`, appointment.patientName, 'patient');
+                                navigate(`/chat?room=patient-${appointment.patientId}`);
+                              }}>
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                              {appointment.status === 'pending' && (
+                                <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                 </div>
