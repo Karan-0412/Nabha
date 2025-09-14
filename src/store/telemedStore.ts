@@ -255,6 +255,12 @@ export function acceptCall(callId: string): Call | undefined {
   call.status = 'active';
   call.startedAt = nowIso();
   writeDB(db);
+  addNotification({
+    type: 'call',
+    title: 'Call accepted',
+    message: `${call.patientName} and ${call.doctorName} are now connected`,
+    recipient: 'all',
+  });
   return call;
 }
 
