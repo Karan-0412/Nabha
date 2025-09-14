@@ -144,6 +144,32 @@ export function DraggableBotAssistant() {
     }
   };
 
+  // Compute chat position anchored to bot icon and keep within viewport
+  const getChatStyle = () => {
+    const ICON_SIZE = 56; // w-14 h-14
+    const GAP = 12;
+    const CHAT_WIDTH = 320; // w-80
+    const CHAT_HEIGHT = isMinimized ? 48 : 384; // approx heights
+
+    let left = position.x - CHAT_WIDTH - GAP;
+    let top = position.y - CHAT_HEIGHT + ICON_SIZE / 2;
+
+    if (left < 8) left = position.x + ICON_SIZE / 2 + GAP;
+
+    const maxLeft = window.innerWidth - CHAT_WIDTH - 8;
+    const maxTop = window.innerHeight - CHAT_HEIGHT - 8;
+    left = Math.min(Math.max(8, left), maxLeft);
+    top = Math.min(Math.max(8, top), maxTop);
+
+    return { left: `${left}px`, top: `${top}px` };
+  };
+
+  useEffect(() => {
+    const handleResize = () => setPosition((p) => ({ ...p }));
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <>
       {/* Draggable Bot Icon */}
@@ -158,17 +184,19 @@ export function DraggableBotAssistant() {
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onDoubleClick={handleDoubleClick}
+        onClick={() => { if (!isDragging) setIsOpen((v) => !v); }}
       >
         <Bot className="h-6 w-6 text-primary-foreground" />
       </Button>
 
       {/* Chat Window */}
       {isOpen && (
-        <Card 
+        <Card
           ref={chatRef}
-          className={`fixed bottom-4 right-4 w-80 h-96 shadow-2xl z-40 transition-all duration-300 ${
+          className={`fixed w-80 h-96 shadow-2xl z-40 transition-all duration-300 ${
             isMinimized ? 'h-12' : 'h-96'
           }`}
+          style={getChatStyle()}
         >
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
             <div className="flex items-center space-x-2">
