@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -18,8 +18,11 @@ import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import RoleSelection from "./components/RoleSelection";
 import VideoPage from "./pages/VideoPage";
+import DashboardPage from "./pages/DashboardPage";
+import { RequireAuth } from "@/components/RouteGuards";
 import SettingsPage from "./pages/SettingsPage";
 import { UserContext, UserRole } from "./context/user-role";
+import NotificationsAgent from "@/components/NotificationsAgent";
 
 const queryClient = new QueryClient();
 
@@ -84,13 +87,13 @@ const App = () => {
                   )}
                   <main className="flex-1">
                   <Routes>
-                    <Route path="/" element={<RoleSelection onRoleSelect={handleRoleSelection} />} />
-                    <Route path="/appointments" element={<AppointmentsPage />} />
-                    <Route path="/documents" element={<DocumentsPage />} />
-                    <Route path="/chat" element={<ChatPage />} />
-                    <Route path="/video" element={<VideoPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/" element={isAuthenticated ? (userRole ? <Navigate to="/dashboard" replace /> : <RoleSelection onRoleSelect={handleRoleSelection} />) : <RoleSelection onRoleSelect={handleRoleSelection} />} />
+                    <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+                    <Route path="/appointments" element={<RequireAuth><AppointmentsPage /></RequireAuth>} />
+                    <Route path="/documents" element={<RequireAuth><DocumentsPage /></RequireAuth>} />
+                    <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
+                    <Route path="/video" element={<RequireAuth><VideoPage /></RequireAuth>} />
+                    <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
                     <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
@@ -99,6 +102,7 @@ const App = () => {
                 </div>
               </div>
               {isAuthenticated && <DraggableBotAssistant />}
+              {isAuthenticated && <NotificationsAgent />}
             </SidebarProvider>
           </BrowserRouter>
         </UserContext.Provider>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, User, Plus, Video, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,54 +6,64 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
+import { useUserContext } from '@/context/user-role';
+import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate } from '@/store/telemedStore';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
-interface Appointment {
-  id: string;
-  patientName: string;
-  doctorName: string;
-  date: Date;
-  time: string;
-  type: 'video' | 'phone' | 'in-person';
-  status: 'confirmed' | 'pending' | 'cancelled';
-  duration: number;
-}
-
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    patientName: 'John Smith',
-    doctorName: 'Dr. Sarah Wilson',
-    date: new Date(),
-    time: '10:00 AM',
-    type: 'video',
-    status: 'confirmed',
-    duration: 30
-  },
-  {
-    id: '2',
-    patientName: 'Emily Johnson',
-    doctorName: 'Dr. Michael Brown',
-    date: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    time: '2:30 PM',
-    type: 'video',
-    status: 'pending',
-    duration: 45
-  },
-  {
-    id: '3',
-    patientName: 'Robert Davis',
-    doctorName: 'Dr. Lisa Anderson',
-    date: new Date(Date.now() + 48 * 60 * 60 * 1000),
-    time: '11:15 AM',
-    type: 'phone',
-    status: 'confirmed',
-    duration: 20
-  }
+const doctors = [
+  { id: 'd1', name: 'Dr. Johnson' },
+  { id: 'd2', name: 'Dr. Smith' },
+  { id: 'd3', name: 'Dr. Lee' },
+];
+const patients = [
+  { id: 'p1', name: 'Jane Smith' },
+  { id: 'p2', name: 'John Doe' },
+  { id: 'p3', name: 'Sarah Johnson' },
 ];
 
 const AppointmentsPage = () => {
   const { t } = useTranslation();
+  const { userRole } = useUserContext();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  const [openNew, setOpenNew] = useState(false);
+  const [newDateTime, setNewDateTime] = useState<string>(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 3);
+    const off = now.getTimezoneOffset();
+    return new Date(now.getTime() - off * 60000).toISOString().slice(0,16);
+  });
+  const [newDoctorId, setNewDoctorId] = useState<string>('d1');
+  const [newPatientId, setNewPatientId] = useState<string>('p1');
+
+  useEffect(() => {
+    const load = () => setAppointments(getAppointmentsForRole(userRole ?? 'patient'));
+    load();
+    return onDBUpdate(load);
+  }, [userRole]);
+
+  const createNewAppointment = () => {
+    const dt = new Date(newDateTime);
+    const doctor = doctors.find(d => d.id === newDoctorId)!;
+    const patient = patients.find(p => p.id === (userRole === 'patient' ? 'p1' : newPatientId))!;
+    if (!isDoctorAvailableAt(newDoctorId, dt)) {
+      alert(`${doctor.name} not available at the selected time`);
+      return;
+    }
+    createAppointment({
+      patientId: patient.id,
+      patientName: patient.name,
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      scheduledAt: dt.toISOString(),
+      status: 'confirmed',
+    });
+    setOpenNew(false);
+  };
 
   const getAppointmentIcon = (type: string) => {
     switch (type) {
@@ -79,14 +89,13 @@ const AppointmentsPage = () => {
     }
   };
 
-  const upcomingAppointments = mockAppointments
-    .filter(apt => apt.date >= new Date())
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
+  const upcomingAppointments = appointments
+    .filter(apt => new Date(apt.scheduledAt) >= new Date())
+    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
     .slice(0, 5);
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{t('appointments')}</h1>
@@ -94,14 +103,66 @@ const AppointmentsPage = () => {
             Manage your medical appointments and schedule new consultations
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Appointment
-        </Button>
+        <Dialog open={openNew} onOpenChange={setOpenNew}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Appointment
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>New Appointment</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              {userRole === 'doctor' && (
+                <div className="space-y-2">
+                  <Label>Patient</Label>
+                  <Select value={newPatientId} onValueChange={setNewPatientId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Doctor</Label>
+                <Select value={newDoctorId} onValueChange={setNewDoctorId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select doctor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors.map(d => {
+                      const dt = new Date(newDateTime);
+                      const available = isDoctorAvailableAt(d.id, dt);
+                      return (
+                        <SelectItem key={d.id} value={d.id} disabled={!available}>
+                          {d.name} {!available ? '— Not available' : ''}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date & Time</Label>
+                <Input type="datetime-local" value={newDateTime} onChange={(e) => setNewDateTime(e.target.value)} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setOpenNew(false)}>Cancel</Button>
+                <Button onClick={createNewAppointment}>Create</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Section */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -118,17 +179,14 @@ const AppointmentsPage = () => {
                 className="rounded-md border"
               />
             </div>
-            
             {selectedDate && (
               <div className="mt-6">
                 <h3 className="font-semibold mb-3">
                   Appointments on {selectedDate.toDateString()}
                 </h3>
                 <div className="space-y-3">
-                  {mockAppointments
-                    .filter(apt => 
-                      apt.date.toDateString() === selectedDate.toDateString()
-                    )
+                  {appointments
+                    .filter(apt => new Date(apt.scheduledAt).toDateString() === selectedDate.toDateString())
                     .map(appointment => (
                       <div
                         key={appointment.id}
@@ -139,7 +197,8 @@ const AppointmentsPage = () => {
                           <div>
                             <p className="font-medium">{appointment.patientName}</p>
                             <p className="text-sm text-muted-foreground">
-                              {appointment.time} - {appointment.duration}min
+                              {new Date(appointment.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {appointment.durationMinutes ? ` - ${appointment.durationMinutes}min` : ''}
                             </p>
                           </div>
                         </div>
@@ -154,7 +213,6 @@ const AppointmentsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Upcoming Appointments */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -178,11 +236,11 @@ const AppointmentsPage = () => {
                         with {appointment.doctorName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {appointment.date.toLocaleDateString()} at {appointment.time}
+                        {new Date(appointment.scheduledAt).toLocaleString()}
                       </p>
                     </div>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs ${getStatusColor(appointment.status)}`}
                     >
                       {appointment.status}
@@ -193,7 +251,6 @@ const AppointmentsPage = () => {
                   )}
                 </div>
               ))}
-              
               {upcomingAppointments.length === 0 && (
                 <p className="text-center text-muted-foreground text-sm py-8">
                   No upcoming appointments
@@ -204,7 +261,6 @@ const AppointmentsPage = () => {
         </Card>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -217,7 +273,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -229,7 +284,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -241,7 +295,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
