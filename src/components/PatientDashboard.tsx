@@ -250,7 +250,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border w-full" />
+              <Calendar mode="single" numberOfMonths={1} selected={date} onSelect={setDate} className="rounded-md border w-full max-w-none" />
             </CardContent>
           </Card>
 
