@@ -203,6 +203,28 @@ export function createAppointment(input: Omit<Appointment, 'id' | 'status' | 'ty
   return apt;
 }
 
+export function acceptAppointment(appointmentId: string) {
+  const db = readDB();
+  const apt = db.appointments.find(a => a.id === appointmentId);
+  if (!apt) return undefined;
+  apt.status = 'confirmed';
+  writeDB(db);
+  // notify
+  addNotification({
+    type: 'appointment',
+    title: 'Appointment accepted',
+    message: `Your appointment with ${apt.doctorName} on ${new Date(apt.scheduledAt).toLocaleString()} has been accepted.`,
+    recipient: 'patient',
+  });
+  // add chat message to patient
+  import("@/store/messageStore").then(({ ensureRoom, addMessage }) => {
+    const roomId = `patient-${apt.patientId}`;
+    ensureRoom(roomId, apt.patientName, 'patient');
+    addMessage(roomId, 'doctor', `Your appointment on ${new Date(apt.scheduledAt).toLocaleString()} has been accepted by ${apt.doctorName}.`);
+  });
+  return apt;
+}
+
 export function startCallNow(params: { patientId: string; patientName: string; doctorId: string; doctorName: string; appointmentId?: string | null }): Call {
   const db = readDB();
   const call: Call = {
