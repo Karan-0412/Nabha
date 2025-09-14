@@ -134,6 +134,8 @@ export function resetMockDB() {
 }
 
 // Queries
+export function getDBUnsafe() { return readDB(); }
+
 export function getAppointments(): Appointment[] {
   return readDB().appointments
     .slice()
