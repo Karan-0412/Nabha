@@ -7,7 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { useUserContext } from '@/context/user-role';
-import { Appointment, getAppointmentsForRole, onDBUpdate } from '@/store/telemedStore';
+import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate } from '@/store/telemedStore';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+
+const doctors = [
+  { id: 'd1', name: 'Dr. Johnson' },
+  { id: 'd2', name: 'Dr. Smith' },
+  { id: 'd3', name: 'Dr. Lee' },
+];
+const patients = [
+  { id: 'p1', name: 'Jane Smith' },
+  { id: 'p2', name: 'John Doe' },
+  { id: 'p3', name: 'Sarah Johnson' },
+];
 
 const AppointmentsPage = () => {
   const { t } = useTranslation();
