@@ -18,6 +18,8 @@ import DocumentsPage from "./pages/DocumentsPage";
 import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import RoleSelection from "./components/RoleSelection";
+import VideoPage from "./pages/VideoPage";
+import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
 
