@@ -218,7 +218,10 @@ const AppointmentsPage = () => {
                                 <MessageSquare className="h-4 w-4" />
                               </Button>
                               {appointment.status === 'pending' && (
-                                <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
+                                <>
+                                  <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
+                                  <Button variant="destructive" size="sm" onClick={() => rejectAppointment(appointment.id)}>Reject</Button>
+                                </>
                               )}
                             </>
                           )}
