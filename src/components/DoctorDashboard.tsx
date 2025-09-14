@@ -66,6 +66,22 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Set Availability</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <Label>Start Hour</Label>
+                <Input type="number" min={0} max={23} defaultValue={getDoctorAvailability('d1').startHour} onChange={(e) => setDoctorAvailability('d1', Number(e.target.value), getDoctorAvailability('d1').endHour)} />
+              </div>
+              <div className="space-y-2">
+                <Label>End Hour</Label>
+                <Input type="number" min={1} max={24} defaultValue={getDoctorAvailability('d1').endHour} onChange={(e) => setDoctorAvailability('d1', getDoctorAvailability('d1').startHour, Number(e.target.value))} />
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">Waiting Patients</h2>
