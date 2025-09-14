@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, User, Plus, Video, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,54 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
-
-interface Appointment {
-  id: string;
-  patientName: string;
-  doctorName: string;
-  date: Date;
-  time: string;
-  type: 'video' | 'phone' | 'in-person';
-  status: 'confirmed' | 'pending' | 'cancelled';
-  duration: number;
-}
-
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    patientName: 'John Smith',
-    doctorName: 'Dr. Sarah Wilson',
-    date: new Date(),
-    time: '10:00 AM',
-    type: 'video',
-    status: 'confirmed',
-    duration: 30
-  },
-  {
-    id: '2',
-    patientName: 'Emily Johnson',
-    doctorName: 'Dr. Michael Brown',
-    date: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    time: '2:30 PM',
-    type: 'video',
-    status: 'pending',
-    duration: 45
-  },
-  {
-    id: '3',
-    patientName: 'Robert Davis',
-    doctorName: 'Dr. Lisa Anderson',
-    date: new Date(Date.now() + 48 * 60 * 60 * 1000),
-    time: '11:15 AM',
-    type: 'phone',
-    status: 'confirmed',
-    duration: 20
-  }
-];
+import { useUserContext } from '@/context/user-role';
+import { Appointment, getAppointmentsForRole, onDBUpdate } from '@/store/telemedStore';
 
 const AppointmentsPage = () => {
   const { t } = useTranslation();
+  const { userRole } = useUserContext();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  useEffect(() => {
+    const load = () => setAppointments(getAppointmentsForRole(userRole ?? 'patient'));
+    load();
+    return onDBUpdate(load);
+  }, [userRole]);
 
   const getAppointmentIcon = (type: string) => {
     switch (type) {
@@ -79,14 +45,13 @@ const AppointmentsPage = () => {
     }
   };
 
-  const upcomingAppointments = mockAppointments
-    .filter(apt => apt.date >= new Date())
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
+  const upcomingAppointments = appointments
+    .filter(apt => new Date(apt.scheduledAt) >= new Date())
+    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
     .slice(0, 5);
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{t('appointments')}</h1>
@@ -101,7 +66,6 @@ const AppointmentsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Section */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -118,17 +82,14 @@ const AppointmentsPage = () => {
                 className="rounded-md border"
               />
             </div>
-            
             {selectedDate && (
               <div className="mt-6">
                 <h3 className="font-semibold mb-3">
                   Appointments on {selectedDate.toDateString()}
                 </h3>
                 <div className="space-y-3">
-                  {mockAppointments
-                    .filter(apt => 
-                      apt.date.toDateString() === selectedDate.toDateString()
-                    )
+                  {appointments
+                    .filter(apt => new Date(apt.scheduledAt).toDateString() === selectedDate.toDateString())
                     .map(appointment => (
                       <div
                         key={appointment.id}
@@ -139,7 +100,8 @@ const AppointmentsPage = () => {
                           <div>
                             <p className="font-medium">{appointment.patientName}</p>
                             <p className="text-sm text-muted-foreground">
-                              {appointment.time} - {appointment.duration}min
+                              {new Date(appointment.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {appointment.durationMinutes ? ` - ${appointment.durationMinutes}min` : ''}
                             </p>
                           </div>
                         </div>
@@ -154,7 +116,6 @@ const AppointmentsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Upcoming Appointments */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -178,11 +139,11 @@ const AppointmentsPage = () => {
                         with {appointment.doctorName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {appointment.date.toLocaleDateString()} at {appointment.time}
+                        {new Date(appointment.scheduledAt).toLocaleString()}
                       </p>
                     </div>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs ${getStatusColor(appointment.status)}`}
                     >
                       {appointment.status}
@@ -193,7 +154,6 @@ const AppointmentsPage = () => {
                   )}
                 </div>
               ))}
-              
               {upcomingAppointments.length === 0 && (
                 <p className="text-center text-muted-foreground text-sm py-8">
                   No upcoming appointments
@@ -204,7 +164,6 @@ const AppointmentsPage = () => {
         </Card>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -217,7 +176,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -229,7 +187,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -241,7 +198,6 @@ const AppointmentsPage = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
