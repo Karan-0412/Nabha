@@ -29,9 +29,17 @@ export interface Call {
   endedAt?: string | null;   // ISO
 }
 
+interface DoctorAvailability {
+  startHour: number; // 0-23
+  endHour: number;   // 0-23
+}
+
 interface TelemedDB {
   appointments: Appointment[];
   calls: Call[];
+  doctorAvailability: Record<string, DoctorAvailability>;
+  reminderFlags: Record<string, { m60?: boolean; m30?: boolean; m15?: boolean }>;
+  shiftReminder: { [doctorId: string]: string | undefined };
   seedVersion: number;
 }
 
