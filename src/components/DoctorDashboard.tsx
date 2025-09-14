@@ -131,7 +131,19 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
                   <div className="font-medium">{apt.patientName}</div>
                   <div className="text-sm text-muted-foreground">{new Date(apt.scheduledAt).toLocaleString()}</div>
                 </div>
-                <Badge variant="secondary">{apt.status}</Badge>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    // open chat with patient
+                    import("@/store/messageStore").then(({ ensureRoom }) => {
+                      ensureRoom(`patient-${apt.patientId}`, apt.patientName, 'patient');
+                      // navigate to chat
+                      window.location.href = `/chat?room=${encodeURIComponent(`patient-${apt.patientId}`)}`;
+                    });
+                  }}>
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                  <Badge variant="secondary">{apt.status}</Badge>
+                </div>
               </div>
             ))}
           </CardContent>
