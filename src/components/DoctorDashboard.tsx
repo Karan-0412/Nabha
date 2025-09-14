@@ -133,16 +133,21 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={() => {
-                    // open chat with patient
                     import("@/store/messageStore").then(({ ensureRoom }) => {
                       ensureRoom(`patient-${apt.patientId}`, apt.patientName, 'patient');
-                      // navigate to chat
                       window.location.href = `/chat?room=${encodeURIComponent(`patient-${apt.patientId}`)}`;
                     });
                   }}>
                     <MessageSquare className="h-4 w-4" />
                   </Button>
-                  <Badge variant="secondary">{apt.status}</Badge>
+                  {apt.status === 'pending' ? (
+                    <div className="flex items-center gap-2">
+                      <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(apt.id)}>Accept</Button>
+                      <Button variant="destructive" size="sm" onClick={() => rejectAppointment(apt.id)}>Reject</Button>
+                    </div>
+                  ) : (
+                    <Badge variant="secondary">{apt.status}</Badge>
+                  )}
                 </div>
               </div>
             ))}
