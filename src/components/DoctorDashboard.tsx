@@ -161,7 +161,7 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
                   {apt.status === 'pending' ? (
                     <div className="flex items-center gap-2">
                       <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(apt.id)}>Accept</Button>
-                      <Button variant="destructive" size="sm" onClick={() => rejectAppointment(apt.id)}>Reject</Button>
+                      <Button variant="destructive" size="sm" onClick={() => openReject(apt.id)}>Reject</Button>
                     </div>
                   ) : (
                     <Badge variant="secondary">{apt.status}</Badge>
