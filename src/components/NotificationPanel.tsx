@@ -44,7 +44,9 @@ const mockNotifications: Notification[] = [
 export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
-  
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = (id: string) => {
@@ -52,6 +54,24 @@ export function NotificationPanel() {
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!isOpen) return;
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -67,7 +87,7 @@ export function NotificationPanel() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Button
         variant="ghost"
         size="sm"
