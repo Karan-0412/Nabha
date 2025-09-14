@@ -35,8 +35,10 @@ interface TelemedDB {
   seedVersion: number;
 }
 
+import { addNotification } from "@/store/notificationStore";
+
 const STORAGE_KEY = 'telemed-db-v1';
-const CURRENT_SEED_VERSION = 1;
+const CURRENT_SEED_VERSION = 2;
 
 function nowIso() {
   return new Date().toISOString();
