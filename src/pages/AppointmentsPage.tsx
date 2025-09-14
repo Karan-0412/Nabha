@@ -28,6 +28,7 @@ const patients = [
 ];
 
 const AppointmentsPage = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { userRole } = useUserContext();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
