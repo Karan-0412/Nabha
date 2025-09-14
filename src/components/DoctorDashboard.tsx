@@ -12,6 +12,8 @@ import {
   onDBUpdate,
   updateDoctorAvailabilityWindow,
   removeDoctorAvailabilityWindow,
+  acceptAppointment,
+  rejectAppointment,
   Appointment,
 } from "@/store/telemedStore";
 
