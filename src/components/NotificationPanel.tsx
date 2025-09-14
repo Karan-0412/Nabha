@@ -69,6 +69,7 @@ export function NotificationPanel() {
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         className="relative"
+        data-notification-button
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (

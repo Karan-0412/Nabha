@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Clock, User, Plus, Video, Phone } from 'lucide-react';
+import { Calendar, Clock, User, Plus, Video, Phone, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { useUserContext } from '@/context/user-role';
-import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate } from '@/store/telemedStore';
+import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate, acceptAppointment, rejectAppointment } from '@/store/telemedStore';
+import { ensureRoom } from '@/store/messageStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,6 +27,7 @@ const patients = [
 ];
 
 const AppointmentsPage = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { userRole } = useUserContext();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -87,6 +90,24 @@ const AppointmentsPage = () => {
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
     }
+  };
+
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectAptId, setRejectAptId] = useState<string | null>(null);
+
+  const openReject = (aptId: string) => {
+    setRejectAptId(aptId);
+    setRejectReason('');
+    setRejectOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (!rejectAptId) return;
+    rejectAppointment(rejectAptId, rejectReason || undefined);
+    setRejectOpen(false);
+    setRejectAptId(null);
+    setRejectReason('');
   };
 
   const upcomingAppointments = appointments
@@ -162,6 +183,22 @@ const AppointmentsPage = () => {
         </Dialog>
       </div>
 
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <Label>Reason (optional)</Label>
+            <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason for rejecting the appointment" />
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setRejectOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmReject}>Reject</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -202,9 +239,27 @@ const AppointmentsPage = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge className={getStatusColor(appointment.status)}>
-                          {appointment.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusColor(appointment.status)}>
+                            {appointment.status}
+                          </Badge>
+                          {userRole === 'doctor' && (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                ensureRoom(`patient-${appointment.patientId}`, appointment.patientName, 'patient');
+                                navigate(`/chat?room=patient-${appointment.patientId}`);
+                              }}>
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                              {appointment.status === 'pending' && (
+                                <>
+                                  <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
+                                  <Button variant="destructive" size="sm" onClick={() => openReject(appointment.id)}>Reject</Button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                 </div>

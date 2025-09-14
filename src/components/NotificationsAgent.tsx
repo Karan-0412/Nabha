@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useUserContext } from "@/context/user-role";
 import { addNotification } from "@/store/notificationStore";
-import { getAppointmentsForRole, getDoctorAvailability, getReminderFlags, setReminderFlag, getAndSetShiftReminderIfNeeded } from "@/store/telemedStore";
+import { getAppointmentsForRole, getDoctorAvailabilityWindows, getReminderFlags, setReminderFlag, getAndSetShiftReminderIfNeeded } from "@/store/telemedStore";
 
 function minutesUntil(dateIso: string) {
   const target = new Date(dateIso).getTime();
@@ -35,17 +35,19 @@ export default function NotificationsAgent() {
       }
 
       if (userRole === 'doctor') {
-        // Shift start reminder 15 minutes before start
+        // Shift start reminder 15 minutes before the next availability window start
         const doctorId = 'd1';
-        const avail = getDoctorAvailability(doctorId);
+        const windows = getDoctorAvailabilityWindows(doctorId);
         const now = new Date();
-        const start = new Date(now);
-        start.setHours(avail.startHour, 0, 0, 0);
-        const diffM = Math.floor((start.getTime() - now.getTime()) / 60000);
-        if (diffM <= 15 && diffM > 14) {
-          const dateKey = `${now.toDateString()}_${avail.startHour}`;
-          if (getAndSetShiftReminderIfNeeded(doctorId, dateKey)) {
-            addNotification({ type: 'reminder', title: 'Shift starts in 15 minutes', message: `Your availability starts at ${avail.startHour}:00`, recipient: 'doctor' });
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        for (const w of windows) {
+          const startMinutes = w.startHour * 60;
+          const diffM = startMinutes - nowMinutes;
+          if (diffM <= 15 && diffM > 14) {
+            const dateKey = `${now.toDateString()}_${w.startHour}`;
+            if (getAndSetShiftReminderIfNeeded(doctorId, dateKey)) {
+              addNotification({ type: 'reminder', title: 'Shift starts in 15 minutes', message: `Your availability starts at ${w.startHour}:00`, recipient: 'doctor' });
+            }
           }
         }
       }

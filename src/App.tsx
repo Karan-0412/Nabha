@@ -23,6 +23,7 @@ import { RequireAuth } from "@/components/RouteGuards";
 import SettingsPage from "./pages/SettingsPage";
 import { UserContext, UserRole } from "./context/user-role";
 import NotificationsAgent from "@/components/NotificationsAgent";
+import NewNotificationPopup from "@/components/NewNotificationPopup";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,7 @@ const App = () => {
               </div>
               {isAuthenticated && <DraggableBotAssistant />}
               {isAuthenticated && <NotificationsAgent />}
+              {isAuthenticated && <NewNotificationPopup />}
             </SidebarProvider>
           </BrowserRouter>
         </UserContext.Provider>
