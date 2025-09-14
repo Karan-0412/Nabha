@@ -103,10 +103,63 @@ const AppointmentsPage = () => {
             Manage your medical appointments and schedule new consultations
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Appointment
-        </Button>
+        <Dialog open={openNew} onOpenChange={setOpenNew}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Appointment
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>New Appointment</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              {userRole === 'doctor' && (
+                <div className="space-y-2">
+                  <Label>Patient</Label>
+                  <Select value={newPatientId} onValueChange={setNewPatientId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Doctor</Label>
+                <Select value={newDoctorId} onValueChange={setNewDoctorId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select doctor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors.map(d => {
+                      const dt = new Date(newDateTime);
+                      const available = isDoctorAvailableAt(d.id, dt);
+                      return (
+                        <SelectItem key={d.id} value={d.id} disabled={!available}>
+                          {d.name} {!available ? '— Not available' : ''}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date & Time</Label>
+                <Input type="datetime-local" value={newDateTime} onChange={(e) => setNewDateTime(e.target.value)} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setOpenNew(false)}>Cancel</Button>
+                <Button onClick={createNewAppointment}>Create</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
