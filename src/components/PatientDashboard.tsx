@@ -117,10 +117,10 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
             />
             <div className="flex items-center gap-2 pr-2">
               <button aria-label="Notifications" className="relative h-10 w-10 rounded-full bg-neutral-400 shadow-inner flex items-center justify-center">
-                <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+                <Bell className="h-4 w-4 text-white" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-600" />
               </button>
-              <Avatar className="h-9 w-9 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <Avatar className="h-10 w-10 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
                 <AvatarImage alt="Profile" />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
@@ -259,8 +259,12 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-2">
-              <Calendar mode="single" numberOfMonths={1} selected={date} onSelect={setDate} className="rounded-md border w-full max-w-none" />
+            <CardContent className="px-6 pt-2 pb-6">
+              <div className="border rounded-md w-full p-3">
+                <div className="flex pr-[10px] justify-center items-start">
+                  <Calendar mode="single" numberOfMonths={1} selected={date} onSelect={setDate} className="rounded-md w-full max-w-none" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
