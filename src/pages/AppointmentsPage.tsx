@@ -239,7 +239,7 @@ const AppointmentsPage = () => {
                               {appointment.status === 'pending' && (
                                 <>
                                   <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
-                                  <Button variant="destructive" size="sm" onClick={() => rejectAppointment(appointment.id)}>Reject</Button>
+                                  <Button variant="destructive" size="sm" onClick={() => openReject(appointment.id)}>Reject</Button>
                                 </>
                               )}
                             </>
