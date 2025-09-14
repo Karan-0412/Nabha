@@ -121,7 +121,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
       </div>
 
       {/* Main content grid: left (main) + right rail */}
-      <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-[24px]">
+      <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-[24px]">
         <div>
           {/* Title */}
           <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
@@ -250,7 +250,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
+              <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border w-full" />
             </CardContent>
           </Card>
 
