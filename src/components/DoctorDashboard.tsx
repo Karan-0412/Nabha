@@ -228,6 +228,22 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
             </CardContent>
           </Card>
         )}
+
+        <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject Appointment</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <Label>Reason (optional)</Label>
+              <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason for rejecting the appointment" />
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setRejectOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={confirmReject}>Reject</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
