@@ -1,4 +1,4 @@
-import { Calendar, Users, Video, Settings, Bell, Moon, Sun } from "lucide-react";
+import { Calendar, Users, Video, Settings, FileText, Moon, Sun, MessageSquare } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: Calendar },
   { title: "Appointments", url: "/appointments", icon: Users },
+  { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Video Calls", url: "/video", icon: Video },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
