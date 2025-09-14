@@ -209,6 +209,12 @@ export function startCallNow(params: { patientId: string; patientName: string; d
   };
   db.calls.push(call);
   writeDB(db);
+  addNotification({
+    type: 'call',
+    title: 'Call started',
+    message: `${call.patientName} with ${call.doctorName}`,
+    recipient: 'all',
+  });
   return call;
 }
 
