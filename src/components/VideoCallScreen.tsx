@@ -73,8 +73,17 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
 
   const sendMessage = () => {
     if (message.trim()) {
-      // In a real app, this would send the message
       setMessage("");
+      // Notify other party
+      const recipient = userRole === 'doctor' ? 'patient' : 'doctor';
+      import("@/store/notificationStore").then(({ addNotification }) =>
+        addNotification({
+          type: 'message',
+          title: 'New message',
+          message: message,
+          recipient: recipient as any,
+        })
+      );
     }
   };
 
