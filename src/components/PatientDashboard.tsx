@@ -108,15 +108,25 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
           {/* Left spacer for logo area */}
           <div className="w-[112px] shrink-0" />
           {/* Search pill */}
-          <div className="relative w-[520px] h-[42px] rounded-[22px] bg-white/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_1px_2px_rgba(17,24,39,0.04)] hidden md:block">
-            <Search className="h-4 w-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search…" className="absolute inset-0 pl-10 pr-4 h-[42px] rounded-[22px] border-0 focus-visible:ring-0 text-[13px]" />
+          <div className="hidden md:flex items-center w-[520px] h-[42px] rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
+            <Search className="h-4 w-4 ml-4 text-muted-foreground" />
+            <input
+              aria-label="Search"
+              placeholder="Search…"
+              className="flex-1 bg-transparent outline-none px-3 text-[13px] placeholder:text-muted-foreground/70"
+            />
+            <div className="flex items-center gap-2 pr-2">
+              <button aria-label="Notifications" className="relative h-8 w-8 rounded-full bg-white/80 shadow-inner flex items-center justify-center">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+              </button>
+              <Avatar className="h-9 w-9 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+                <AvatarImage alt="Profile" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+            </div>
           </div>
-          {/* Right icons */}
-          <div className="ml-auto flex items-center gap-3">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            <div className="h-9 w-9 rounded-full bg-white shadow-[0_6px_18px_rgba(27,37,63,0.06)]" />
-          </div>
+          <div className="ml-auto" />
         </div>
       </div>
 
