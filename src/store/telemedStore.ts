@@ -185,6 +185,12 @@ export function createAppointment(input: Omit<Appointment, 'id' | 'status' | 'ty
   };
   db.appointments.push(apt);
   writeDB(db);
+  addNotification({
+    type: 'appointment',
+    title: 'New appointment scheduled',
+    message: `${apt.patientName} with ${apt.doctorName} at ${new Date(apt.scheduledAt).toLocaleString()}`,
+    recipient: 'all',
+  });
   return apt;
 }
 
