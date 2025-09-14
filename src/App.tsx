@@ -104,6 +104,7 @@ const App = () => {
               </div>
               {isAuthenticated && <DraggableBotAssistant />}
               {isAuthenticated && <NotificationsAgent />}
+              {isAuthenticated && <NewNotificationPopup />}
             </SidebarProvider>
           </BrowserRouter>
         </UserContext.Provider>
