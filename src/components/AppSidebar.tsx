@@ -11,10 +11,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useTheme } from "./theme-provider";
+import { useUserContext } from "@/context/user-role";
 import { Button } from "@/components/ui/button";
 
-const navigationItems = [
-  { title: "Dashboard", url: "/", icon: Calendar },
+const patientNav = [
+  { title: "Dashboard", url: "/dashboard", icon: Calendar },
   { title: "Appointments", url: "/appointments", icon: Users },
   { title: "Documents", url: "/documents", icon: FileText },
   { title: "Chat", url: "/chat", icon: MessageSquare },
@@ -22,9 +23,19 @@ const navigationItems = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
+const doctorNav = [
+  { title: "Dashboard", url: "/dashboard", icon: Calendar },
+  { title: "Appointments", url: "/appointments", icon: Users },
+  { title: "Video Calls", url: "/video", icon: Video },
+  { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Chat", url: "/chat", icon: MessageSquare },
+  { title: "Settings", url: "/settings", icon: Settings },
+];
+
 export function AppSidebar() {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { userRole } = useUserContext();
   
   const currentPath = location.pathname;
   const isActive = (path: string) => currentPath === path;
@@ -44,7 +55,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
+              {(userRole === 'doctor' ? doctorNav : patientNav).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="flex items-center space-x-2">
