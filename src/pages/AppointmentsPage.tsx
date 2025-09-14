@@ -30,11 +30,40 @@ const AppointmentsPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
+  const [openNew, setOpenNew] = useState(false);
+  const [newDateTime, setNewDateTime] = useState<string>(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 3);
+    const off = now.getTimezoneOffset();
+    return new Date(now.getTime() - off * 60000).toISOString().slice(0,16);
+  });
+  const [newDoctorId, setNewDoctorId] = useState<string>('d1');
+  const [newPatientId, setNewPatientId] = useState<string>('p1');
+
   useEffect(() => {
     const load = () => setAppointments(getAppointmentsForRole(userRole ?? 'patient'));
     load();
     return onDBUpdate(load);
   }, [userRole]);
+
+  const createNewAppointment = () => {
+    const dt = new Date(newDateTime);
+    const doctor = doctors.find(d => d.id === newDoctorId)!;
+    const patient = patients.find(p => p.id === (userRole === 'patient' ? 'p1' : newPatientId))!;
+    if (!isDoctorAvailableAt(newDoctorId, dt)) {
+      alert(`${doctor.name} not available at the selected time`);
+      return;
+    }
+    createAppointment({
+      patientId: patient.id,
+      patientName: patient.name,
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      scheduledAt: dt.toISOString(),
+      status: 'confirmed',
+    });
+    setOpenNew(false);
+  };
 
   const getAppointmentIcon = (type: string) => {
     switch (type) {
