@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Clock, Video, Plus, Trash2, MessageSquare } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   addDoctorAvailabilityWindow,
   getAppointmentsForRole,
