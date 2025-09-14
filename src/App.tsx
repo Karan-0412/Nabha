@@ -17,22 +17,23 @@ import AppointmentsPage from "./pages/AppointmentsPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
+import RoleSelection from "./components/RoleSelection";
 
 const queryClient = new QueryClient();
 
-type AppState = 'auth' | 'role-selection' | 'dashboard';
+type AppState = 'role-selection' | 'auth' | 'dashboard';
 
 const App = () => {
-  const [currentState, setCurrentState] = useState<AppState>('auth');
+  const [currentState, setCurrentState] = useState<AppState>('role-selection');
   const [userRole, setUserRole] = useState<'patient' | 'doctor' | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleAuthSuccess = () => {
-    setCurrentState('role-selection');
-  };
-
   const handleRoleSelection = (role: 'patient' | 'doctor') => {
     setUserRole(role);
+    setCurrentState('auth');
+  };
+
+  const handleAuthSuccess = () => {
     setIsAuthenticated(true);
     setCurrentState('dashboard');
   };
@@ -40,8 +41,20 @@ const App = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserRole(null);
-    setCurrentState('auth');
+    setCurrentState('role-selection');
   };
+
+  if (currentState === 'role-selection') {
+    return (
+      <ThemeProvider defaultTheme="light" storageKey="telemed-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <RoleSelection onRoleSelect={handleRoleSelection} />
+        </TooltipProvider>
+      </ThemeProvider>
+    );
+  }
 
   if (currentState === 'auth') {
     return (
@@ -50,37 +63,6 @@ const App = () => {
           <Toaster />
           <Sonner />
           <AuthPage onAuthSuccess={handleAuthSuccess} />
-        </TooltipProvider>
-      </ThemeProvider>
-    );
-  }
-
-  if (currentState === 'role-selection') {
-    return (
-      <ThemeProvider defaultTheme="light" storageKey="telemed-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-            <div className="text-center space-y-6 p-8">
-              <h1 className="text-3xl font-bold">Choose Your Role</h1>
-              <p className="text-muted-foreground">Select how you'll be using TeleMed</p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => handleRoleSelection('patient')}
-                  className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary-hover transition-colors"
-                >
-                  I'm a Patient
-                </button>
-                <button
-                  onClick={() => handleRoleSelection('doctor')}
-                  className="bg-secondary text-secondary-foreground px-6 py-3 rounded-lg hover:bg-secondary/80 transition-colors"
-                >
-                  I'm a Doctor
-                </button>
-              </div>
-            </div>
-          </div>
         </TooltipProvider>
       </ThemeProvider>
     );
