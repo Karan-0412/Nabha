@@ -14,6 +14,7 @@ export interface Appointment {
   status: AppointmentStatus;
   durationMinutes?: number;
 }
+export type { Appointment };
 
 export interface Call {
   id: string;
