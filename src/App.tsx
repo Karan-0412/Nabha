@@ -11,7 +11,6 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 import { DraggableBotAssistant } from "@/components/DraggableBotAssistant";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AppointmentsPage from "./pages/AppointmentsPage";
 import DocumentsPage from "./pages/DocumentsPage";
@@ -43,18 +42,6 @@ const App = () => {
     setUserRole(null);
     setCurrentState('role-selection');
   };
-
-  if (currentState === 'role-selection') {
-    return (
-      <ThemeProvider defaultTheme="light" storageKey="telemed-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <RoleSelection onRoleSelect={handleRoleSelection} />
-        </TooltipProvider>
-      </ThemeProvider>
-    );
-  }
 
   if (currentState === 'auth') {
     return (
@@ -93,11 +80,11 @@ const App = () => {
                 )}
                 <main className="flex-1">
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<RoleSelection onRoleSelect={handleRoleSelection} />} />
                   <Route path="/appointments" element={<AppointmentsPage />} />
                   <Route path="/documents" element={<DocumentsPage />} />
                   <Route path="/chat" element={<ChatPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
