@@ -271,6 +271,12 @@ export function declineCall(callId: string): Call | undefined {
   call.status = 'declined';
   call.endedAt = nowIso();
   writeDB(db);
+  addNotification({
+    type: 'call',
+    title: 'Call declined',
+    message: `${call.patientName} declined the call`,
+    recipient: 'doctor',
+  });
   return call;
 }
 
