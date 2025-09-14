@@ -317,6 +317,43 @@ export function stopIncomingCallSimulation() {
   }
 }
 
+// Availability
+export function getDoctorAvailability(doctorId: string) {
+  const db = readDB();
+  return db.doctorAvailability[doctorId] ?? { startHour: 9, endHour: 17 };
+}
+
+export function setDoctorAvailability(doctorId: string, startHour: number, endHour: number) {
+  const db = readDB();
+  db.doctorAvailability[doctorId] = { startHour, endHour };
+  writeDB(db);
+}
+
+export function isDoctorAvailableAt(doctorId: string, date: Date) {
+  const a = getDoctorAvailability(doctorId);
+  const h = date.getHours();
+  return h >= a.startHour && h < a.endHour;
+}
+
+export function getReminderFlags() {
+  return readDB().reminderFlags;
+}
+export function setReminderFlag(aptId: string, key: 'm60'|'m30'|'m15') {
+  const db = readDB();
+  db.reminderFlags[aptId] = db.reminderFlags[aptId] || {};
+  (db.reminderFlags[aptId] as any)[key] = true;
+  writeDB(db);
+}
+
+export function getAndSetShiftReminderIfNeeded(doctorId: string, dateKey: string) {
+  const db = readDB();
+  const prev = db.shiftReminder[doctorId];
+  if (prev === dateKey) return false;
+  db.shiftReminder[doctorId] = dateKey;
+  writeDB(db);
+  return true;
+}
+
 // Listener utility for components
 export function onDBUpdate(handler: () => void): () => void {
   const cb = () => handler();
