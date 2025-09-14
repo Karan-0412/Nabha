@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,96 +6,62 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Send, Bot, User, Search, Settings } from 'lucide-react';
-
-interface Message {
-  id: string;
-  sender: 'user' | 'assistant' | 'doctor';
-  text: string;
-  timestamp: Date;
-  type?: 'text' | 'image' | 'file';
-}
-
-interface ChatRoom {
-  id: string;
-  name: string;
-  type: 'ai' | 'doctor';
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  avatar?: string;
-}
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { ensureRoom, getMessagesForRoom, addMessage, onMessagesUpdate, ChatRoom as StoredRoom, MessageRecord } from '@/store/messageStore';
+import { useUserContext } from '@/context/user-role';
 
 const ChatPage = () => {
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'assistant',
-      text: 'Hello! I\'m your AI health assistant. How can I help you today? I can answer questions about your health, medications, or help schedule appointments.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 5)
-    }
-  ]);
+  const { userRole } = useUserContext();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const initialRoom = params.get('room') || 'ai-assistant';
+
+  const [selectedRoom, setSelectedRoom] = useState<string>(initialRoom);
+  const [rooms, setRooms] = useState<StoredRoom[]>(() => getStoredRooms());
+  const [messages, setMessages] = useState<MessageRecord[]>(() => getMessagesForRoom(initialRoom));
   const [inputValue, setInputValue] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState<string>('ai-assistant');
   const [isTyping, setIsTyping] = useState(false);
 
-  const chatRooms: ChatRoom[] = [
-    {
-      id: 'ai-assistant',
-      name: 'AI Health Assistant',
-      type: 'ai',
-      lastMessage: 'Hello! How can I help you today?',
-      timestamp: '5 min ago',
-      unreadCount: 0
-    },
-    {
-      id: 'doctor-smith',
-      name: 'Dr. Sarah Smith',
-      type: 'doctor',
-      lastMessage: 'Your test results look good. Let\'s schedule a follow-up.',
-      timestamp: '2 hours ago',
-      unreadCount: 1
-    },
-    {
-      id: 'doctor-johnson',
-      name: 'Dr. Mark Johnson',
-      type: 'doctor',
-      lastMessage: 'Please take your medication as prescribed.',
-      timestamp: '1 day ago',
-      unreadCount: 0
+  function getStoredRooms() {
+    try {
+      return (window.localStorage.getItem('telemed-messages-v1') ? JSON.parse(window.localStorage.getItem('telemed-messages-v1') as string).rooms : []) as StoredRoom[];
+    } catch {
+      return [];
     }
-  ];
+  }
+
+  useEffect(() => {
+    setRooms(getStoredRooms());
+    const unsub = onMessagesUpdate(() => {
+      setRooms(getStoredRooms());
+      setMessages(getMessagesForRoom(selectedRoom));
+    });
+    return () => unsub();
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    // react to query param changes
+    setSelectedRoom(initialRoom);
+    setMessages(getMessagesForRoom(initialRoom));
+  }, [initialRoom]);
+
+  const chatRooms = useMemo(() => {
+    const base: any[] = [
+      { id: 'ai-assistant', name: 'AI Health Assistant', type: 'ai', lastMessage: 'Hello! How can I help you today?', timestamp: 'now', unreadCount: 0 },
+    ];
+    return base.concat(rooms.map(r => ({ id: r.id, name: r.name, type: r.type, lastMessage: '', timestamp: '', unreadCount: 0 })));
+  }, [rooms]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: inputValue,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, newMessage]);
+    const sender = userRole === 'doctor' ? 'doctor' : userRole === 'patient' ? 'patient' : 'system';
+    addMessage(selectedRoom, sender as any, inputValue.trim());
+    setMessages(getMessagesForRoom(selectedRoom));
     setInputValue('');
-    setIsTyping(true);
-
-    // Simulate response based on selected room
-    setTimeout(() => {
-      const responseText = selectedRoom === 'ai-assistant' 
-        ? 'Thank you for your question. I\'m here to help with your health concerns. Could you provide more specific details about what you\'d like to know?'
-        : 'Thank you for your message. I\'ll review your case and get back to you shortly.';
-
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: selectedRoom === 'ai-assistant' ? 'assistant' : 'doctor',
-        text: responseText,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, response]);
-      setIsTyping(false);
-    }, 2000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -106,8 +71,9 @@ const ChatPage = () => {
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const currentRoom = chatRooms.find(room => room.id === selectedRoom);
@@ -119,7 +85,7 @@ const ChatPage = () => {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">{t('chat', 'Chat')}</h2>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -137,16 +103,18 @@ const ChatPage = () => {
             {chatRooms.map((room) => (
               <div
                 key={room.id}
-                onClick={() => setSelectedRoom(room.id)}
+                onClick={() => {
+                  setSelectedRoom(room.id);
+                  navigate(`/chat?room=${encodeURIComponent(room.id)}`);
+                }}
                 className={`p-3 rounded-lg cursor-pointer transition-colors mb-2 ${
                   selectedRoom === room.id ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50'
-                }`}
-              >
+                }`}>
                 <div className="flex items-start space-x-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={room.avatar} />
+                    <AvatarImage src={''} />
                     <AvatarFallback className={room.type === 'ai' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-                      {room.type === 'ai' ? <Bot className="h-5 w-5" /> : room.name.split(' ').map(n => n[0]).join('')}
+                      {room.type === 'ai' ? <Bot className="h-5 w-5" /> : room.name.split(' ').map((n:any) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -176,9 +144,9 @@ const ChatPage = () => {
         <div className="p-4 border-b bg-card">
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={currentRoom?.avatar} />
+              <AvatarImage src={''} />
               <AvatarFallback className={currentRoom?.type === 'ai' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-                {currentRoom?.type === 'ai' ? <Bot className="h-5 w-5" /> : currentRoom?.name.split(' ').map(n => n[0]).join('')}
+                {currentRoom?.type === 'ai' ? <Bot className="h-5 w-5" /> : (currentRoom?.name || '').split(' ').map((n:any)=>n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -196,20 +164,19 @@ const ChatPage = () => {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+                className={`flex ${message.sender === 'patient' || message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex items-start space-x-2 max-w-[70%] ${
-                  message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                  message.sender === 'patient' || message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                 }`}>
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className={
-                      message.sender === 'user' 
+                      message.sender === 'patient' || message.sender === 'user' 
                         ? 'bg-primary text-primary-foreground' 
-                        : message.sender === 'assistant'
+                        : message.sender === 'assistant' || message.sender === 'system'
                         ? 'bg-secondary'
                         : 'bg-muted'
                     }>
-                      {message.sender === 'user' ? (
+                      {message.sender === 'patient' || message.sender === 'user' ? (
                         <User className="h-4 w-4" />
                       ) : message.sender === 'assistant' ? (
                         <Bot className="h-4 w-4" />
@@ -219,13 +186,13 @@ const ChatPage = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className={`p-3 rounded-lg ${
-                    message.sender === 'user'
+                    message.sender === 'patient' || message.sender === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
                   }`}>
                     <p className="text-sm">{message.text}</p>
                     <p className={`text-xs mt-1 ${
-                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                      message.sender === 'patient' || message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
                     }`}>
                       {formatTime(message.timestamp)}
                     </p>
