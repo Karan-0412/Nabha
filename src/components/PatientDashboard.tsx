@@ -108,7 +108,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
           {/* Left spacer for logo area */}
           <div className="w-[112px] shrink-0" />
           {/* Search pill */}
-          <div className="hidden md:flex items-center w-[520px] h-[42px] rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
+          <div className="hidden md:flex items-center w-[650px] h-[60px] max-w-full rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
             <Search className="h-4 w-4 ml-4 text-muted-foreground" />
             <input
               aria-label="Search"
