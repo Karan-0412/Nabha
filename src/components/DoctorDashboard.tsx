@@ -71,6 +71,24 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
     removeDoctorAvailabilityWindow('d1', index);
   };
 
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectAptId, setRejectAptId] = useState<string | null>(null);
+
+  const openReject = (aptId: string) => {
+    setRejectAptId(aptId);
+    setRejectReason('');
+    setRejectOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (!rejectAptId) return;
+    rejectAppointment(rejectAptId, rejectReason || undefined);
+    setRejectOpen(false);
+    setRejectAptId(null);
+    setRejectReason('');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
