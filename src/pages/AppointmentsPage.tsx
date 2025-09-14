@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { useUserContext } from '@/context/user-role';
-import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate, acceptAppointment } from '@/store/telemedStore';
+import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate, acceptAppointment, rejectAppointment } from '@/store/telemedStore';
 import { ensureRoom } from '@/store/messageStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
