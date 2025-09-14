@@ -12,6 +12,10 @@ interface Patient {
   status: 'waiting' | 'active';
 }
 
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { getDoctorAvailability, setDoctorAvailability } from "@/store/telemedStore";
+
 interface DoctorDashboardProps {
   onConnectPatient: (patientId: string) => void;
   onBack: () => void;
