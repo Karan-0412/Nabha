@@ -4,55 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-
-interface Notification {
-  id: string;
-  type: 'appointment' | 'message' | 'reminder';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'appointment',
-    title: 'New Appointment Request',
-    message: 'Jane Smith has requested a consultation',
-    time: '2 min ago',
-    read: false
-  },
-  {
-    id: '2',
-    type: 'message',
-    title: 'Message from Patient',
-    message: 'New message in ongoing consultation',
-    time: '5 min ago',
-    read: false
-  },
-  {
-    id: '3',
-    type: 'reminder',
-    title: 'Upcoming Appointment',
-    message: 'Appointment with John Doe in 15 minutes',
-    time: '10 min ago',
-    read: true
-  }
-];
+import { getNotifications, markNotificationRead, onNotificationsUpdate, NotificationItem } from "@/store/notificationStore";
+import { useUserContext } from "@/context/user-role";
 
 export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { userRole } = useUserContext();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const refresh = () => setNotifications(getNotifications((userRole ?? 'patient') as any));
+    refresh();
+    return onNotificationsUpdate(refresh);
+  }, [userRole]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+    markNotificationRead(id);
   };
 
   useEffect(() => {
@@ -84,6 +55,11 @@ export function NotificationPanel() {
       default:
         return <Bell className="h-4 w-4" />;
     }
+  };
+
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleString();
   };
 
   return (
@@ -136,7 +112,7 @@ export function NotificationPanel() {
                           {notification.message}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {notification.time}
+                          {formatTime(notification.timestamp)}
                         </p>
                       </div>
                       {!notification.read && (
