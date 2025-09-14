@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useUserContext } from "@/context/user-role";
 import { addNotification } from "@/store/notificationStore";
-import { getAppointmentsForRole, getDoctorAvailability, getReminderFlags, setReminderFlag, getAndSetShiftReminderIfNeeded } from "@/store/telemedStore";
+import { getAppointmentsForRole, getDoctorAvailabilityWindows, getReminderFlags, setReminderFlag, getAndSetShiftReminderIfNeeded } from "@/store/telemedStore";
 
 function minutesUntil(dateIso: string) {
   const target = new Date(dateIso).getTime();
