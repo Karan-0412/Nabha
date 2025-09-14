@@ -287,6 +287,12 @@ export function endCall(callId: string): Call | undefined {
   call.status = 'ended';
   call.endedAt = nowIso();
   writeDB(db);
+  addNotification({
+    type: 'call',
+    title: 'Call ended',
+    message: `${call.patientName} with ${call.doctorName}`,
+    recipient: 'all',
+  });
   return call;
 }
 
