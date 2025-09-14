@@ -19,6 +19,7 @@ import AuthPage from "./pages/AuthPage";
 import RoleSelection from "./components/RoleSelection";
 import VideoPage from "./pages/VideoPage";
 import SettingsPage from "./pages/SettingsPage";
+import { UserContext, UserRole } from "./context/user-role";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ type AppState = 'role-selection' | 'auth' | 'dashboard';
 
 const App = () => {
   const [currentState, setCurrentState] = useState<AppState>('role-selection');
-  const [userRole, setUserRole] = useState<'patient' | 'doctor' | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleRoleSelection = (role: 'patient' | 'doctor') => {
@@ -63,42 +64,44 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              {isAuthenticated && <AppSidebar />}
-              <div className="flex-1 flex flex-col">
-                {isAuthenticated && (
-                  <header className="h-12 flex items-center justify-between border-b px-4">
-                    <SidebarTrigger />
-                    <div className="flex items-center space-x-2">
-                      <NotificationPanel />
-                      <UserAvatar 
-                        user={{ name: userRole === 'patient' ? 'Patient User' : 'Dr. Smith' }}
-                        onLogout={handleLogout}
-                      />
-                    </div>
-                  </header>
-                )}
-                <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<RoleSelection onRoleSelect={handleRoleSelection} />} />
-                  <Route path="/appointments" element={<AppointmentsPage />} />
-                  <Route path="/documents" element={<DocumentsPage />} />
-                  <Route path="/chat" element={<ChatPage />} />
-                  <Route path="/video" element={<VideoPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                </main>
+        <UserContext.Provider value={{ userRole, setUserRole, isAuthenticated, setIsAuthenticated }}>
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="flex min-h-screen w-full">
+                {isAuthenticated && <AppSidebar />}
+                <div className="flex-1 flex flex-col">
+                  {isAuthenticated && (
+                    <header className="h-12 flex items-center justify-between border-b px-4">
+                      <SidebarTrigger />
+                      <div className="flex items-center space-x-2">
+                        <NotificationPanel />
+                        <UserAvatar
+                          user={{ name: userRole === 'patient' ? 'Patient User' : 'Dr. Smith' }}
+                          onLogout={handleLogout}
+                        />
+                      </div>
+                    </header>
+                  )}
+                  <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<RoleSelection onRoleSelect={handleRoleSelection} />} />
+                    <Route path="/appointments" element={<AppointmentsPage />} />
+                    <Route path="/documents" element={<DocumentsPage />} />
+                    <Route path="/chat" element={<ChatPage />} />
+                    <Route path="/video" element={<VideoPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  </main>
+                </div>
               </div>
-            </div>
-            {isAuthenticated && <DraggableBotAssistant />}
-          </SidebarProvider>
-        </BrowserRouter>
+              {isAuthenticated && <DraggableBotAssistant />}
+            </SidebarProvider>
+          </BrowserRouter>
+        </UserContext.Provider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

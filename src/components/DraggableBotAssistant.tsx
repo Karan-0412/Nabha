@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Minimize2, Bot } from 'lucide-react';
+import { Send, X, Minimize2, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -257,9 +257,9 @@ export function DraggableBotAssistant() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   className="text-sm"
-                />
+                 />
                 <Button size="sm" onClick={handleSendMessage}>
-                  <MessageSquare className="h-4 w-4" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

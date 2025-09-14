@@ -31,14 +31,13 @@ const VideoCallScreen = ({ patientId, userRole, onEndCall }: VideoCallScreenProp
   const [message, setMessage] = useState("");
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Mock patient data
-  const patientData = {
-    name: "Jane Smith",
-    age: 28,
-    sex: "Female",
-    dateJoined: "4/22/2019",
-    claimsShared: "Yes"
+  // Mock patient data by id
+  const patientsMap: Record<string, { name: string; age: number; sex: string; dateJoined: string; claimsShared: string } > = {
+    "1": { name: "Jane Smith", age: 28, sex: "Female", dateJoined: "4/22/2019", claimsShared: "Yes" },
+    "2": { name: "John Doe", age: 45, sex: "Male", dateJoined: "6/10/2020", claimsShared: "No" },
+    "3": { name: "Sarah Johnson", age: 34, sex: "Female", dateJoined: "1/15/2021", claimsShared: "Yes" },
   };
+  const patientData = patientsMap[patientId] ?? { name: "Unknown", age: 0, sex: "N/A", dateJoined: "N/A", claimsShared: "N/A" };
 
   const rxSteps = [
     { label: "Intake Reviewed", status: "completed" },
