@@ -22,6 +22,7 @@ import DashboardPage from "./pages/DashboardPage";
 import { RequireAuth } from "@/components/RouteGuards";
 import SettingsPage from "./pages/SettingsPage";
 import { UserContext, UserRole } from "./context/user-role";
+import NotificationsAgent from "@/components/NotificationsAgent";
 
 const queryClient = new QueryClient();
 
