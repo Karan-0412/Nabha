@@ -226,6 +226,26 @@ export function acceptAppointment(appointmentId: string) {
   return apt;
 }
 
+export function rejectAppointment(appointmentId: string, reason?: string) {
+  const db = readDB();
+  const apt = db.appointments.find(a => a.id === appointmentId);
+  if (!apt) return undefined;
+  apt.status = 'cancelled';
+  writeDB(db);
+  addNotification({
+    type: 'appointment',
+    title: 'Appointment rejected',
+    message: `Your appointment with ${apt.doctorName} on ${new Date(apt.scheduledAt).toLocaleString()} has been rejected.${reason ? ' Reason: ' + reason : ''}`,
+    recipient: 'patient',
+  });
+  import("@/store/messageStore").then(({ ensureRoom, addMessage }) => {
+    const roomId = `patient-${apt.patientId}`;
+    ensureRoom(roomId, apt.patientName, 'patient');
+    addMessage(roomId, 'doctor', `Your appointment on ${new Date(apt.scheduledAt).toLocaleString()} has been rejected by ${apt.doctorName}.${reason ? ' Reason: ' + reason : ''}`);
+  });
+  return apt;
+}
+
 export function startCallNow(params: { patientId: string; patientName: string; doctorId: string; doctorName: string; appointmentId?: string | null }): Call {
   const db = readDB();
   const call: Call = {
