@@ -79,9 +79,6 @@ const DoctorDashboard = ({ onConnectPatient, onBack }: DoctorDashboardProps) => 
             <h1 className="text-2xl font-bold text-foreground">Doctor Dashboard</h1>
             <p className="text-muted-foreground">Welcome, Dr. Johnson</p>
           </div>
-          <Button variant="outline" onClick={onBack}>
-            Switch Role
-          </Button>
         </div>
       </header>
 
