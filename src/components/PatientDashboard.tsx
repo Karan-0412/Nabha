@@ -133,7 +133,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </button>
               <Avatar className="h-10 w-10 border-0 ring-0 shadow-none bg-transparent">
                 <AvatarImage alt="Profile" />
-                <AvatarFallback className="h-[80%] w-[80%] m-auto bg-[#e4e4e4]">JD</AvatarFallback>
+                <AvatarFallback className="h-[60%] w-[60%] m-auto bg-[#e4e4e4]">JD</AvatarFallback>
               </Avatar>
             </div>
           </div>
