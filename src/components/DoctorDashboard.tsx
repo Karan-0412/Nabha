@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Area,
   AreaChart,
@@ -15,6 +14,7 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -174,17 +174,15 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
                     <div className="text-xl font-medium">$47,500</div>
                   </div>
                   <div className="h-[240px]">
-                    <ChartContainer config={{ value: { label: "Value", color: "#2563EB" } }}>
-                      <ResponsiveContainer>
-                        <BarChart data={overviewData} barSize={18} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                          <XAxis dataKey="m" tickLine={false} axisLine={false} />
-                          <YAxis hide />
-                          <Bar dataKey="v" radius={[6, 6, 0, 0]} fill="#1F8FFF" />
-                          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
+                    <ResponsiveContainer>
+                      <BarChart data={overviewData} barSize={18} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                        <XAxis dataKey="m" tickLine={false} axisLine={false} />
+                        <YAxis hide />
+                        <Bar dataKey="v" radius={[6, 6, 0, 0]} fill="#1F8FFF" />
+                        <Tooltip />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               </CardContent>
