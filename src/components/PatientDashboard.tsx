@@ -333,8 +333,8 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                 <CardDescription>Total Patients</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-6">
-                  <div className="w-[180px] h-[180px]">
+                <div className="flex flex-col lg:flex-row items-center gap-6">
+                  <div className="relative w-[180px] h-[180px]">
                     <ResponsiveContainer>
                       <PieChart>
                         <Pie data={DIAGNOSE_DATA} dataKey="value" startAngle={90} endAngle={-270} innerRadius={60} outerRadius={85} paddingAngle={2} cornerRadius={6} onClick={(d:any) => onDiagnosisClick(d?.name)}>
@@ -345,9 +345,15 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
+                    {/* center total */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div className="text-2xl font-semibold">640</div>
+                      <div className="text-xs text-muted-foreground">Total Patients</div>
+                    </div>
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="text-4xl font-semibold">640</div>
+
+                  {/* right-side vertical list for large screens */}
+                  <div className="hidden lg:block space-y-2 text-sm">
                     {DIAGNOSE_DATA.map((d) => (
                       <div key={d.name} className={`flex items-center gap-2 ${selectedDiagnosis===d.name ? 'font-semibold' : ''}`}>
                         <span className="h-2 w-2 rounded-sm" style={{ background: d.color }} />
@@ -355,6 +361,16 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* horizontal legend at bottom */}
+                <div className="mt-4 flex flex-wrap gap-4 justify-center lg:justify-start">
+                  {DIAGNOSE_DATA.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-sm">
+                      <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
+                      <span className="text-sm">{d.name} ({d.value})</span>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
