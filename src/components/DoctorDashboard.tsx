@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -199,9 +198,10 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
                       <PieChart>
                         <Pie data={diagnoseData} dataKey="value" startAngle={90} endAngle={-270} innerRadius={60} outerRadius={85} paddingAngle={2} cornerRadius={6}>
                           {diagnoseData.map((entry, index) => (
-                            <path key={index} />
+                            <Cell key={index} fill={entry.color} />
                           ))}
                         </Pie>
+                        <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
