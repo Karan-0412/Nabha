@@ -58,6 +58,29 @@ const DIAGNOSE_DATA = [
   { name: 'Cardio', value: 12, color: '#F59E0B' },
 ];
 
+// subtle hex pattern + noise for background behind overview bars
+const hexPattern = encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 172'>
+    <defs>
+      <pattern id='hex' width='17.32' height='30' patternUnits='userSpaceOnUse'>
+        <polygon points='8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5' fill='none' stroke='black' stroke-width='1.2' />
+      </pattern>
+    </defs>
+    <rect width='100%' height='100%' fill='url(#hex)' opacity='0.06' />
+  </svg>`);
+
+const noiseSvg = encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+    <filter id='n'>
+      <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>
+      <feColorMatrix type='saturate' values='0'/>
+      <feComponentTransfer>
+        <feFuncA type='table' tableValues='0 0.03'/>
+      </feComponentTransfer>
+    </filter>
+    <rect width='100%' height='100%' filter='url(#n)'/>
+  </svg>`);
+
 const initialSchedule = [
   { id: 's1', title: 'Pre-op Consultation', start: 8, end: 9, avatars: ['JS','AL'], color: '#1F8FFF' },
   { id: 's2', title: 'Blood Pressure Follow-up', start: 11.5, end: 12.5, avatars: ['MB'], color: '#1F8FFF' },
@@ -227,16 +250,38 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                   </div>
                   <div className="h-[240px]">
                     <ResponsiveContainer>
-                      <BarChart data={overviewData} barSize={18} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
+                      <BarChart data={overviewData} barSize={22} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
+                        <defs>
+                          <pattern id="hatched" width="6" height="6" patternTransform="rotate(20)" patternUnits="userSpaceOnUse">
+                            <rect width="6" height="6" fill="#EAF3FF" />
+                            <path d="M0,6 L6,0" stroke="#D6E9FF" strokeWidth="1" />
+                          </pattern>
+                          <linearGradient id="julGrad" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stopColor="#2B63F7" stopOpacity="1" />
+                            <stop offset="100%" stopColor="#9FC6FF" stopOpacity="1" />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(17,24,39,0.06)" />
-                        <XAxis dataKey="m" tickLine={false} axisLine={false} />
+                        <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
                         <YAxis hide />
-                        <Bar dataKey="v" radius={[6,6,0,0]} fill="#2B63F7" label={({ x, y, value, index }) => overviewData[index]?.m === 'Jul' ? <text x={x} y={y-8} fill="#111827" fontSize={12} fontWeight={600}>$47,500</text> : null}>
+                        {/* custom label renderer to place the July label above the bar */}
+                        <Bar dataKey="v" radius={[10,10,6,6]}>
                           {overviewData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.m === 'Jul' ? '#1F8FFF' : '#E6F0FF'} />
+                            <Cell key={idx} fill={entry.m === 'Jul' ? 'url(#julGrad)' : 'url(#hatched)'} stroke={entry.m === 'Jul' ? undefined : 'transparent'} />
                           ))}
                         </Bar>
-                        <Tooltip />
+                        <Tooltip content={({ active, payload }) => {
+                          if (!active || !payload || !payload.length) return null;
+                          const item = payload[0];
+                          return (
+                            <div className="rounded-md bg-white/95 shadow-lg border px-3 py-2 text-[12px]">
+                              <div className="font-medium">{item.payload.m}</div>
+                              <div className="text-blue-600">${item.payload.v.toLocaleString()}</div>
+                            </div>
+                          );
+                        }} />
+                        {/* Render custom label for July using LabelList */}
+                        {/* LabelList is not ideal for full custom SVG; we'll render manual overlay below */}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
