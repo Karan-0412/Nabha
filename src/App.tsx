@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,10 +29,37 @@ const queryClient = new QueryClient();
 
 type AppState = 'role-selection' | 'auth' | 'dashboard';
 
+const AUTH_KEY = 'tm-auth';
+const ROLE_KEY = 'tm-role';
+
 const App = () => {
   const [currentState, setCurrentState] = useState<AppState>('role-selection');
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Load persisted auth on mount
+  useEffect(() => {
+    try {
+      const savedAuth = localStorage.getItem(AUTH_KEY);
+      const savedRole = localStorage.getItem(ROLE_KEY) as UserRole | null;
+      if (savedAuth === '1') {
+        setIsAuthenticated(true);
+        if (savedRole === 'patient' || savedRole === 'doctor') setUserRole(savedRole);
+        setCurrentState('dashboard');
+      }
+    } catch {}
+  }, []);
+
+  // Persist changes
+  useEffect(() => {
+    try { localStorage.setItem(AUTH_KEY, isAuthenticated ? '1' : '0'); } catch {}
+  }, [isAuthenticated]);
+  useEffect(() => {
+    try {
+      if (userRole) localStorage.setItem(ROLE_KEY, userRole);
+      else localStorage.removeItem(ROLE_KEY);
+    } catch {}
+  }, [userRole]);
 
   const handleRoleSelection = (role: 'patient' | 'doctor') => {
     setUserRole(role);
@@ -47,6 +74,7 @@ const App = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserRole(null);
+    try { localStorage.setItem(AUTH_KEY, '0'); localStorage.removeItem(ROLE_KEY); } catch {}
     setCurrentState('role-selection');
   };
 
@@ -75,7 +103,7 @@ const App = () => {
                 {isAuthenticated && <AppSidebar />}
                 <div className="flex-1 flex flex-col">
                   {isAuthenticated && (
-                    <header className="h-12 flex items-center justify-between border-b px-4">
+                    <header className="h-12 flex items-center justify-between px-4">
                       <SidebarTrigger />
                       <div className="flex items-center space-x-2">
                         <NotificationPanel />
