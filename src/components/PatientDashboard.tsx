@@ -109,16 +109,18 @@ function KpiCard({ item, active, onClick }: { item: typeof KPI_ITEMS[number]; ac
       className={`rounded-[12px] bg-white p-4 shadow-[0_6px_18px_rgba(27,37,63,0.06)] cursor-pointer transition-transform ${active ? 'ring-2 ring-primary/30 scale-[1.01]' : ''}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">{item.title}</div>
-        <div className={`text-sm font-medium ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
-      </div>
-      <div className="mt-2 flex items-center justify-between">
-        <div>
-          <div className="text-2xl font-semibold">{item.value.toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground">Since last week</div>
+        <div className="flex-1">
+          <div className="text-sm text-muted-foreground">{item.title}</div>
+          <div className="mt-2">
+            <div className="text-2xl font-semibold">{item.value.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Since last week</div>
+          </div>
         </div>
-        <div className="w-28 h-12">
-          <Sparkline value={item.value} />
+        <div className="ml-4 flex items-center">
+          <div className={`text-sm font-medium mr-3 ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
+          <div className="w-24 h-12 rounded-md bg-muted/10 p-1 flex items-center">
+            <Sparkline value={item.value} />
+          </div>
         </div>
       </div>
     </div>
