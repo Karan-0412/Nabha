@@ -14,16 +14,17 @@ import { DraggableBotAssistant } from "@/components/DraggableBotAssistant";
 import NotFound from "./pages/NotFound";
 import AppointmentsPage from "./pages/AppointmentsPage";
 import DocumentsPage from "./pages/DocumentsPage";
-import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import RoleSelection from "./components/RoleSelection";
 import VideoPage from "./pages/VideoPage";
 import DashboardPage from "./pages/DashboardPage";
 import { RequireAuth } from "@/components/RouteGuards";
 import SettingsPage from "./pages/SettingsPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
 import { UserContext, UserRole } from "./context/user-role";
 import NotificationsAgent from "@/components/NotificationsAgent";
 import NewNotificationPopup from "@/components/NewNotificationPopup";
+import "@/utils/testAI"; // Test AI connection on app load
 
 const queryClient = new QueryClient();
 
@@ -120,7 +121,7 @@ const App = () => {
                     <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
                     <Route path="/appointments" element={<RequireAuth><AppointmentsPage /></RequireAuth>} />
                     <Route path="/documents" element={<RequireAuth><DocumentsPage /></RequireAuth>} />
-                    <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
+                    <Route path="/ai-assistant" element={<RequireAuth><AIAssistantPage /></RequireAuth>} />
                     <Route path="/video" element={<RequireAuth><VideoPage /></RequireAuth>} />
                     <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
                     <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />

@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { aiService } from '@/services/aiService';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -19,26 +21,13 @@ interface EnhancedChatProps {
 }
 
 const EnhancedChat = ({ userRole }: EnhancedChatProps) => {
+  const { i18n } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! How can I help you today?',
+      text: 'Hello! I\'m your AI health assistant. How can I help you today?',
       sender: userRole === 'patient' ? 'doctor' : 'ai',
       timestamp: new Date(Date.now() - 300000),
-      status: 'read'
-    },
-    {
-      id: '2', 
-      text: 'I have been experiencing some chest pain recently.',
-      sender: 'user',
-      timestamp: new Date(Date.now() - 240000),
-      status: 'read'
-    },
-    {
-      id: '3',
-      text: 'I understand your concern. Can you describe the pain? Is it sharp, dull, or crushing?',
-      sender: userRole === 'patient' ? 'doctor' : 'ai',
-      timestamp: new Date(Date.now() - 180000),
       status: 'read'
     }
   ]);
@@ -56,27 +45,56 @@ const EnhancedChat = ({ userRole }: EnhancedChatProps) => {
     scrollToBottom();
   }, [messages]);
 
-  // Simulate typing indicator
+  // Handle AI response generation
   useEffect(() => {
     if (isTyping) {
-      const timer = setTimeout(() => {
-        setIsTyping(false);
-        setTypingUser(null);
-        
-        // Simulate response
-        const response: Message = {
-          id: Date.now().toString(),
-          text: 'Thank you for that information. Based on what you\'ve described, I recommend scheduling an in-person examination.',
-          sender: userRole === 'patient' ? 'doctor' : 'ai',
-          timestamp: new Date(),
-          status: 'sent'
-        };
-        setMessages(prev => [...prev, response]);
-      }, 2000 + Math.random() * 2000);
-      
+      const generateAIResponse = async () => {
+        try {
+          // Get the last user message for context
+          const lastUserMessage = messages.filter(m => m.sender === 'user').pop();
+          if (!lastUserMessage) return;
+
+          // Get conversation context
+          const context = messages.slice(-5).map(m => 
+            `${m.sender}: ${m.text}`
+          ).join('\n');
+
+          const response = await aiService.chatResponse(
+            lastUserMessage.text, 
+            context, 
+            i18n.language
+          );
+
+          const aiMessage: Message = {
+            id: Date.now().toString(),
+            text: response,
+            sender: userRole === 'patient' ? 'doctor' : 'ai',
+            timestamp: new Date(),
+            status: 'sent'
+          };
+          
+          setMessages(prev => [...prev, aiMessage]);
+        } catch (error) {
+          console.error('AI response error:', error);
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            text: 'I apologize, but I\'m having trouble processing your request right now. Please try again or consult with a healthcare professional.',
+            sender: userRole === 'patient' ? 'doctor' : 'ai',
+            timestamp: new Date(),
+            status: 'sent'
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        } finally {
+          setIsTyping(false);
+          setTypingUser(null);
+        }
+      };
+
+      // Add a small delay to show typing indicator
+      const timer = setTimeout(generateAIResponse, 1000);
       return () => clearTimeout(timer);
     }
-  }, [isTyping, userRole]);
+  }, [isTyping, messages, userRole, i18n.language]);
 
   const handleSend = () => {
     if (!newMessage.trim()) return;

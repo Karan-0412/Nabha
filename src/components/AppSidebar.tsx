@@ -1,4 +1,4 @@
-import { Calendar, Users, Video, Settings, FileText, Moon, Sun, MessageSquare } from "lucide-react";
+import { Calendar, Users, Video, Settings, FileText, Moon, Sun, MessageSquare, Bot } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 const patientNav = [
   { title: "Dashboard", url: "/dashboard", icon: Calendar },
   { title: "Appointments", url: "/appointments", icon: Users },
+  { title: "AI Assistant", url: "/ai-assistant", icon: Bot },
   { title: "Documents", url: "/documents", icon: FileText },
-  { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Video Calls", url: "/video", icon: Video },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
@@ -26,9 +26,9 @@ const patientNav = [
 const doctorNav = [
   { title: "Dashboard", url: "/dashboard", icon: Calendar },
   { title: "Appointments", url: "/appointments", icon: Users },
+  { title: "AI Assistant", url: "/ai-assistant", icon: Bot },
   { title: "Video Calls", url: "/video", icon: Video },
   { title: "Documents", url: "/documents", icon: FileText },
-  { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

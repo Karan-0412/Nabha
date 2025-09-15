@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, Bell, Droplets, Gauge, HeartPulse, Search } from "lucide-react";
+import { Calendar as CalendarIcon, Bell, Droplets, Gauge, HeartPulse, Search, Bot, Stethoscope, Camera } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +103,7 @@ function StatCard({
 }
 
 const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
+  const navigate = useNavigate();
   const [range, setRange] = useState("monthly");
   const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -235,6 +237,65 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Features Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px] mt-6">
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-[18px] font-semibold leading-[1.1]">AI Assistant</CardTitle>
+                </div>
+                <CardDescription className="text-[13px]">Get instant health guidance and answers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/ai-assistant')} 
+                  className="rounded-[12px] text-[13px] w-full"
+                >
+                  Start Chat
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-[18px] font-semibold leading-[1.1]">Symptom Checker</CardTitle>
+                </div>
+                <CardDescription className="text-[13px]">Describe symptoms for AI analysis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/ai-assistant?tab=symptoms')} 
+                  variant="outline" 
+                  className="rounded-[12px] text-[13px] w-full"
+                >
+                  Check Symptoms
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-[18px] font-semibold leading-[1.1]">Image Analysis</CardTitle>
+                </div>
+                <CardDescription className="text-[13px]">Upload medical images for AI review</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/ai-assistant?tab=image')} 
+                  variant="outline" 
+                  className="rounded-[12px] text-[13px] w-full"
+                >
+                  Analyze Image
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Lower info cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px] mt-6">
