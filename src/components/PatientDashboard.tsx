@@ -1,21 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useId } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, Bell, Droplets, Gauge, HeartPulse, Search, Bot, Stethoscope, Camera } from "lucide-react";
+import { Calendar as CalendarIcon, Bell, Droplets, Gauge, HeartPulse, Search, Bot, Stethoscope, Camera, Users, Activity, AlertTriangle, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
 } from "recharts";
 
 interface PatientDashboardProps {
@@ -23,31 +29,46 @@ interface PatientDashboardProps {
   onBack: () => void;
 }
 
-// Chart data to match requested wave shape (0..11)
-const chartRows = [
-  { x: 0, p: 400, s: 320 },
-  { x: 1, p: 480, s: 420 },
-  { x: 2, p: 360, s: 380 },
-  { x: 3, p: 540, s: 440 },
-  { x: 4, p: 600, s: 500 },
-  { x: 5, p: 520, s: 560 },
-  { x: 6, p: 760, s: 600 },
-  { x: 7, p: 680, s: 620 },
-  { x: 8, p: 590, s: 580 },
-  { x: 9, p: 620, s: 600 },
-  { x: 10, p: 650, s: 620 },
-  { x: 11, p: 670, s: 640 },
+// KPI data (from screenshot)
+const KPI_ITEMS = [
+  { id: 'patients', title: 'Patients', value: 6025, delta: 6.85 },
+  { id: 'new', title: 'New This Week', value: 4152, delta: 4.11 },
+  { id: 'critical', title: 'Critical Alerts', value: 5948, delta: 92.05 },
+  { id: 'appointments', title: 'Appointments', value: 5626, delta: 27.4 },
 ];
 
+// Overview monthly data
+const OVERVIEW_FULL = [
+  { m: 'Jan', v: 12500 },
+  { m: 'Feb', v: 14200 },
+  { m: 'Mar', v: 15800 },
+  { m: 'Apr', v: 17100 },
+  { m: 'May', v: 18250 },
+  { m: 'Jun', v: 19600 },
+  { m: 'Jul', v: 47500 },
+  { m: 'Aug', v: 21000 },
+  { m: 'Sep', v: 22650 },
+  { m: 'Oct', v: 24100 },
+  { m: 'Nov', v: 25600 },
+  { m: 'Dec', v: 27350 },
+];
+
+const DIAGNOSE_DATA = [
+  { name: 'Neurology', value: 120, color: '#3B82F6' },
+  { name: 'Oncology', value: 30, color: '#06B6D4' },
+  { name: 'Urology', value: 24, color: '#FB7185' },
+  { name: 'Cardio', value: 12, color: '#F59E0B' },
+];
+
+// subtle hex pattern + noise for background behind overview bars
 const hexPattern = encodeURIComponent(`
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 172'>
     <defs>
       <pattern id='hex' width='17.32' height='30' patternUnits='userSpaceOnUse'>
-        <polygon points='8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5'
-          fill='none' stroke='black' stroke-width='1.2' />
+        <polygon points='8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5' fill='none' stroke='black' stroke-width='1.2' />
       </pattern>
     </defs>
-    <rect width='100%' height='100%' fill='url(#hex)' opacity='0.08'/>
+    <rect width='100%' height='100%' fill='url(#hex)' opacity='0.06' />
   </svg>`);
 
 const noiseSvg = encodeURIComponent(`
@@ -56,187 +77,371 @@ const noiseSvg = encodeURIComponent(`
       <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>
       <feColorMatrix type='saturate' values='0'/>
       <feComponentTransfer>
-        <feFuncA type='table' tableValues='0 0.04'/>
+        <feFuncA type='table' tableValues='0 0.03'/>
       </feComponentTransfer>
     </filter>
     <rect width='100%' height='100%' filter='url(#n)'/>
   </svg>`);
 
-function StatCard({
-  title,
-  value,
-  gradient,
-  icon,
-}: {
-  title: string;
-  value: string;
-  gradient: string;
-  icon: JSX.Element;
-}) {
+const initialSchedule = [
+  { id: 's1', title: 'Pre-op Consultation', start: 8, end: 9, avatars: ['JS','AL'], color: '#1F8FFF' },
+  { id: 's2', title: 'Blood Pressure Follow-up', start: 11.5, end: 12.5, avatars: ['MB'], color: '#1F8FFF' },
+  { id: 's3', title: 'Migraine Evaluation', start: 14, end: 15, avatars: ['KL'], color: '#F97316' },
+];
+
+function Sparkline({ value }: { value: number }) {
+  const data = Array.from({ length: 8 }).map((_, i) => ({ x: i, y: Math.round(value * (0.75 + ((i % 4) * 0.06))) }));
+  return (
+    <div className="w-full h-10">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Line type="monotone" dataKey="y" stroke="#2B63F7" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function KpiCard({ item, active, onClick }: { item: typeof KPI_ITEMS[number]; active?: boolean; onClick: (id: string) => void }) {
   return (
     <div
-      className="rounded-[16px] bg-white border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)] p-3"
-      aria-label={`${title} card`}
+      role="button"
+      onClick={() => onClick(item.id)}
+      className={`rounded-[12px] bg-white p-4 shadow-[0_6px_18px_rgba(27,37,63,0.06)] cursor-pointer transition-transform ${active ? 'ring-2 ring-primary/30 scale-[1.01]' : ''}`}
     >
-      <div
-        className="relative rounded-[14px] p-4 md:p-5 min-h-[112px]"
-        style={{
-          backgroundImage: `${gradient}, radial-gradient(60% 60% at 50% 45%, rgba(43,99,247,0.06) 0%, rgba(43,99,247,0) 60%), url("data:image/svg+xml;utf8,${hexPattern}") , url("data:image/svg+xml;utf8,${noiseSvg}")`,
-          backgroundBlendMode: "normal, normal, overlay, soft-light",
-          backgroundSize: "cover, 100% 100%, 180px, 300px",
-          backgroundPosition: "0 0, 0 0, 0 0, 0 0",
-          boxShadow: "inset 0 2px 6px rgba(255,255,255,0.6)",
-        }}
-      >
-        <div className="flex items-start justify-between">
-          <div className="h-9 w-9 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
-            {icon}
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="text-sm text-muted-foreground">{item.title}</div>
+          <div className="mt-2">
+            <div className="text-2xl font-semibold">{item.value.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Since last week</div>
           </div>
         </div>
-        <div className="mt-6">
-          <p className="text-[18px] font-semibold leading-[1.1] text-[#111827]">{title}</p>
-          <p className="text-[14px] font-medium leading-[1.4] text-[#111827]/80 mt-1">{value}</p>
+        <div className="ml-4 flex flex-col items-center">
+          <div className="w-28 h-12 rounded-md bg-muted/10 p-1 flex items-center">
+            <Sparkline value={item.value} />
+          </div>
+          <div className={`text-xs font-medium mt-2 ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
         </div>
       </div>
     </div>
   );
 }
 
-const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
+function AvatarStack({ avatars }: { avatars: string[] }) {
+  const visible = avatars.slice(0, 3);
+  const more = avatars.length - visible.length;
+  return (
+    <div className="flex -space-x-3 items-center">
+      {visible.map((a, i) => (
+        <div key={i} className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-xs font-medium ring-2 ring-white shadow-sm" style={{background:'#EDEFF6'}}>{a}</div>
+      ))}
+      {more > 0 && <div className="h-8 w-8 rounded-full bg-muted/10 flex items-center justify-center text-xs font-medium ring-2 ring-white shadow-sm">+{more}</div>}
+    </div>
+  );
+}
+
+export default function PatientDashboard({ onRequestConsultation }: PatientDashboardProps) {
   const navigate = useNavigate();
-  const [range, setRange] = useState("monthly");
+  const [selectedKpi, setSelectedKpi] = useState<string | null>(null);
+  const [overviewRange, setOverviewRange] = useState<'1y'|'6m'|'3m'|'1m'>('1y');
+  const [overviewData, setOverviewData] = useState(OVERVIEW_FULL);
+  const [selectedDiagnosis, setSelectedDiagnosis] = useState<string | null>(null);
+  const [schedule, setSchedule] = useState(initialSchedule);
+  const [editing, setEditing] = useState<any | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [messageCount, setMessageCount] = useState(2);
+
+  useEffect(() => {
+    // simulate websocket updates for message count
+    const t = setInterval(() => {
+      setMessageCount((c) => (Math.random() > 0.7 ? c + Math.floor(Math.random()*2) : Math.max(0, c - (Math.random()>0.8?1:0))));
+    }, 4500);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    // update overviewData when range changes
+    if (overviewRange === '1y') setOverviewData(OVERVIEW_FULL);
+    if (overviewRange === '6m') setOverviewData(OVERVIEW_FULL.slice(6).concat(OVERVIEW_FULL.slice(0,6)));
+    if (overviewRange === '3m') setOverviewData(OVERVIEW_FULL.slice(9));
+    if (overviewRange === '1m') setOverviewData(OVERVIEW_FULL.slice(11));
+  }, [overviewRange]);
 
   const today = useMemo(() => {
     const d = new Date();
-    return d.toLocaleDateString(undefined, { day: "2-digit", month: "long", year: "numeric" });
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric' });
   }, []);
 
+  const onKpiClick = (id: string) => {
+    setSelectedKpi((s) => (s === id ? null : id));
+    // simple visual filter: when selecting critical show only July big spike
+    if (id === 'critical') setOverviewRange('1y');
+  };
+
+  const onDiagnosisClick = (name: string) => {
+    setSelectedDiagnosis((s) => (s === name ? null : name));
+  };
+
+  // custom label renderer for July bar
+  const renderBarLabel = (props: any) => {
+    const { x, y, value, index } = props;
+    if (!overviewData || !overviewData[index] || overviewData[index].m !== 'Jul') return null;
+    // draw a white rounded label above the bar
+    return (
+      <g>
+        <rect x={x - 36} y={y - 34} rx={10} ry={10} width={72} height={24} fill="#ffffff" opacity={1} />
+        <text x={x} y={y - 18} fill="#111827" fontSize={12} fontWeight={700} textAnchor="middle">${overviewData[index].v.toLocaleString()}</text>
+      </g>
+    );
+  };
+
+  // drag/drop handlers for schedule
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left; // 0..width
+    const width = rect.width;
+    const hour = 6 + (x / width) * 10; // map to 6..16
+    setSchedule((s) => s.map((it) => (it.id === id ? { ...it, start: Math.max(6, Math.min(15, Math.round(hour*4)/4)), end: Math.max( it.start + 0.5, Math.round((Math.max(6, Math.min(15, Math.round(hour*4)/4))+0.5)*4)/4) } : it)));
+  };
+  const onDragOver = (e: React.DragEvent) => e.preventDefault();
+
+  const openEdit = (id: string) => {
+    const it = schedule.find(s => s.id === id);
+    if (it) setEditing({ ...it });
+  };
+  const saveEdit = () => {
+    if (!editing) return;
+    setSchedule((s) => s.map((it) => it.id === editing.id ? editing : it));
+    setEditing(null);
+  };
+
   return (
-    <div
-      className="min-h-full"
-      style={{ background: "linear-gradient(180deg,#F7FBFF 0%, #F4F8FF 100%)" }}
-    >
-      {/* Top bar inside canvas */}
+    <div className="min-h-full" style={{ background: 'linear-gradient(180deg,#F7FBFF 0%, #F4F8FF 100%)' }}>
       <div className="px-[32px] pt-6">
         <div className="flex justify-between h-[72px]">
-          {/* Search pill */}
-          <div className="hidden md:flex items-center w-[650px] h-[50px] max-w-full rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
+          <div className="hidden md:flex items-center w-[650px] h-[60px] max-w-full rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
             <Search className="h-4 w-4 ml-4 text-muted-foreground" />
-            <input
-              aria-label="Search"
-              placeholder="Search…"
-              className="flex-1 bg-transparent outline-none px-3 text-[13px] placeholder:text-muted-foreground/70"
-            />
+            <input aria-label="Search" placeholder="Search anything here..." className="flex-1 bg-transparent outline-none px-3 text-[13px] placeholder:text-muted-foreground/70" />
             <div className="flex items-center gap-2 pr-2">
-              <button aria-label="Notifications" className="relative h-[30px] w-[30px] rounded-full bg-neutral-400 shadow-inner flex items-center justify-center">
+              <button aria-label="Notifications" className="relative h-[20px] w-[20px] rounded-full bg-neutral-400 shadow-inner flex items-center justify-center">
                 <Bell className="h-4 w-4 text-white" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-600" />
               </button>
               <Avatar className="h-10 w-10 border-0 ring-0 shadow-none bg-transparent">
                 <AvatarImage alt="Profile" />
-                <AvatarFallback className="h-[80%] w-[80%] m-auto bg-[#e4e4e4]">JD</AvatarFallback>
+                <AvatarFallback className="h-[60%] w-[60%] m-auto bg-[#e4e4e4]">JD</AvatarFallback>
               </Avatar>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main content grid: left (main) + right rail */}
       <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-[24px]">
         <div>
-          {/* Title with date on the right */}
           <div className="flex items-center justify-between">
-            <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+            <div className="flex items-center gap-6">
+              <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant={overviewRange==='1y'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1y')}>1 Year</Button>
+                <Button variant={overviewRange==='6m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('6m')}>6 Months</Button>
+                <Button variant={overviewRange==='3m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('3m')}>3 Months</Button>
+                <Button variant={overviewRange==='1m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1m')}>1 Month</Button>
+              </div>
+            </div>
             <div className="hidden sm:flex items-center gap-2 text-[13px] text-muted-foreground">
               <CalendarIcon className="h-4 w-4" />
-              {new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
-                .format(new Date())
-                .replace(/\./g, '')
-                .toLowerCase()}
+              {today}
             </div>
           </div>
 
-          {/* Status cards with decorative background panel */}
-          <div className="relative mt-6">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-x-2 -inset-y-3 rounded-[18px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]"
-              style={{
-                backgroundImage: `linear-gradient(135deg,#F7FBFF 0%, #EEF4FF 100%), radial-gradient(60% 60% at 20% 10%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%), url("data:image/svg+xml;utf8,${hexPattern}"), url("data:image/svg+xml;utf8,${noiseSvg}")`,
-                backgroundBlendMode: "normal, screen, overlay, soft-light",
-                backgroundSize: "cover, 100% 100%, 200px, 300px",
-                backgroundPosition: "0 0, 0 0, 0 0, 0 0",
-              }}
-            />
-            <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
-              <StatCard
-                title="Heart Rate"
-                value="80 BPM"
-                icon={<HeartPulse className="h-5 w-5 text-blue-600" />}
-                gradient="radial-gradient(120%_120%at_0%_0%,#E8EEFF 0%,transparent 60%), linear-gradient(135deg,#E8EEFF 0%,#CFD8FF 100%)"
-              />
-              <StatCard
-                title="Blood Pressure"
-                value="120/80 mmHG"
-                icon={<Gauge className="h-5 w-5 text-cyan-600" />}
-                gradient="radial-gradient(120%_120%at_0%_0%,#E7F9FF 0%,transparent 60%), linear-gradient(135deg,#E7F9FF 0%,#DFF7FF 100%)"
-              />
-              <StatCard
-                title="Glucose Level"
-                value="60 - 80 mg/dl"
-                icon={<Droplets className="h-5 w-5 text-pink-600" />}
-                gradient="radial-gradient(120%_120%at_0%_0%,#FFF0FB 0%,transparent 60%), linear-gradient(135deg,#FFF0FB 0%,#F6D9F9 100%)"
-              />
-            </div>
+          {/* KPI row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+            {KPI_ITEMS.map(k => (
+              <KpiCard key={k.id} item={k} active={selectedKpi===k.id} onClick={onKpiClick} />
+            ))}
           </div>
 
-          {/* Activity card with chart */}
-          <Card className="mt-6 rounded-[16px] border-0 shadow-[var(--shadow-1,0_6px_18px_rgba(27,37,63,0.06))]">
-            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
-              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Activity</CardTitle>
-              <Tabs value={range} onValueChange={(v) => setRange(v)}>
-                <TabsList className="rounded-full h-9 bg-muted/50">
-                  <TabsTrigger value="weekly" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full text-[13px]">Weekly</TabsTrigger>
-                  <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full text-[13px]">Monthly</TabsTrigger>
-                  <TabsTrigger value="yearly" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full text-[13px]">Yearly</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] rounded-[12px] bg-white shadow-[0_6px_18px_rgba(27,37,63,0.06)] p-3">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartRows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(17,24,39,0.08)" />
-                    <XAxis dataKey="x" tickLine={false} axisLine={false} tick={{ fill: "#6B7280", fontSize: 11 }} />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      domain={[0, 800]}
-                      ticks={[0, 200, 400, 600, 800]}
-                      tickFormatter={(v) => `$${v}`}
-                      tick={{ fill: "#6B7280", fontSize: 12 }}
-                    />
-                    <Tooltip
-                      cursor={{ stroke: "rgba(44,138,255,0.18)", strokeWidth: 1, strokeDasharray: "4 4" }}
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload || !payload.length) return null;
-                        return (
-                          <div className="rounded-md bg-white/95 shadow-lg border px-3 py-2 text-[12px]">
-                            <div className="font-medium">x: {label}</div>
-                            <div className="text-blue-600">Primary: ${payload[0].value as number}</div>
-                            {payload[1] && <div className="text-sky-500">Secondary: ${payload[1].value as number}</div>}
-                          </div>
-                        );
-                      }}
-                    />
-                    <Line type="monotone" dataKey="p" stroke="#2B63F7" strokeWidth={3.5} dot={{ r: 0 }} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="s" stroke="#9FC6FF" strokeWidth={2.5} dot={{ r: 0 }} activeDot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Overview + donut + schedule */}
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 mt-4">
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-[18px]">Overview</CardTitle>
+                    <CardDescription>Avg per month</CardDescription>
+                  </div>
+                  <div className="text-xs text-muted-foreground">&nbsp;</div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-4 items-center">
+                  <div>
+                    <div className="text-3xl font-semibold">$138,500</div>
+                    <div className="text-xs text-green-600 mt-1">13.4%</div>
+                    <div className="mt-4 text-sm text-muted-foreground">July 2024</div>
+                    <div className="text-xl font-medium">$47,500</div>
+                  </div>
+                  <div className="h-[240px]" style={{backgroundImage: `url("data:image/svg+xml;utf8,${hexPattern}"), url("data:image/svg+xml;utf8,${noiseSvg}")`, backgroundBlendMode: 'overlay,soft-light', backgroundSize: '180px, 300px', backgroundPosition: '0 0'}}>
+                    <ResponsiveContainer>
+                      <BarChart data={overviewData} barSize={22} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
+                        <defs>
+                          <pattern id="hatched" width="6" height="6" patternTransform="rotate(20)" patternUnits="userSpaceOnUse">
+                            <rect width="6" height="6" fill="#EAF3FF" />
+                            <path d="M0,6 L6,0" stroke="#D6E9FF" strokeWidth="1" />
+                          </pattern>
+                          <linearGradient id="julGrad" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stopColor="#2B63F7" stopOpacity="1" />
+                            <stop offset="100%" stopColor="#9FC6FF" stopOpacity="1" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(17,24,39,0.06)" />
+                        <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                        <YAxis hide />
+                        {/* custom label renderer to place the July label above the bar */}
+                        <Bar dataKey="v" radius={[10,10,6,6]}>
+                          {overviewData.map((entry, idx) => (
+                            <Cell key={idx} fill={entry.m === 'Jul' ? 'url(#julGrad)' : 'url(#hatched)'} stroke={entry.m === 'Jul' ? undefined : 'transparent'} />
+                          ))}
+                        <LabelList dataKey="v" content={renderBarLabel} />
+                        </Bar>
+                        <Tooltip content={({ active, payload }) => {
+                          if (!active || !payload || !payload.length) return null;
+                          const item = payload[0];
+                          return (
+                            <div className="rounded-md bg-white/95 shadow-lg border px-3 py-2 text-[12px]">
+                              <div className="font-medium">{item.payload.m}</div>
+                              <div className="text-blue-600">${item.payload.v.toLocaleString()}</div>
+                            </div>
+                          );
+                        }} />
+                        {/* Render custom label for July using LabelList */}
+                        {/* LabelList is not ideal for full custom SVG; we'll render manual overlay below */}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[18px]">Avg Diagnose</CardTitle>
+                <CardDescription>Total Patients</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col lg:flex-row items-center gap-6">
+                  <div className="relative w-[180px] h-[180px]">
+                    <ResponsiveContainer>
+                      <PieChart>
+                        <Pie data={DIAGNOSE_DATA} dataKey="value" startAngle={90} endAngle={-270} innerRadius={60} outerRadius={85} paddingAngle={2} cornerRadius={6} onClick={(d:any) => onDiagnosisClick(d?.name)}>
+                          {DIAGNOSE_DATA.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* center total */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div className="text-2xl font-semibold">640</div>
+                      <div className="text-xs text-muted-foreground">Total Patients</div>
+                    </div>
+                  </div>
+
+                  {/* right-side vertical list for large screens */}
+                  <div className="hidden lg:block space-y-2 text-sm">
+                    {DIAGNOSE_DATA.map((d) => (
+                      <div key={d.name} className={`flex items-center gap-2 ${selectedDiagnosis===d.name ? 'font-semibold' : ''}`}>
+                        <span className="h-2 w-2 rounded-sm" style={{ background: d.color }} />
+                        <span>{d.value} {d.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* horizontal legend at bottom */}
+                <div className="mt-4 flex flex-wrap gap-4 justify-center lg:justify-start">
+                  {DIAGNOSE_DATA.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-sm">
+                      <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
+                      <span className="text-sm">{d.name} ({d.value})</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Today Schedule + Latest Visits side-by-side */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 mt-4">
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-[18px]">Today Schedule</CardTitle>
+                  <div className="text-xs text-muted-foreground">September {new Date().getFullYear()}</div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <div className="grid grid-cols-8 text-xs text-muted-foreground">
+                    {['06:00','08:00','10:00','12:00','14:00','16:00','18:00',''].map((t,i) => (
+                      <div key={i} className="h-6">{t}</div>
+                    ))}
+                  </div>
+                  <div className="relative h-[96px] rounded-md bg-muted/40 mt-2" onDrop={onDrop} onDragOver={onDragOver}>
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-blue-500/40" />
+                    {schedule.map(s => {
+                      const left = ((s.start - 6) / 12) * 100; // 6..18
+                      const width = ((s.end - s.start) / 12) * 100;
+                      return (
+                        <button
+                          key={s.id}
+                          draggable
+                          onDragStart={(e) => onDragStart(e, s.id)}
+                          onClick={() => openEdit(s.id)}
+                          className="absolute top-4 h-10 rounded-full shadow-sm text-white text-xs px-3 flex items-center gap-2"
+                          style={{ left: `${left}%`, width: `${Math.max(6, width)}%`, background: s.color }}
+                          aria-label={s.title}
+                        >
+                          <AvatarStack avatars={s.avatars} />
+                          <span className="truncate">{s.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[18px] font-semibold leading-[1.1]">Latest Visits</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {([{name:'Esther Howard',dept:'Dermatology',time:'Today 8:44'},{name:'Eleanor Pena',dept:'Gastroenterology',time:'Today 8:54'},{name:'Brooklyn Simmons',dept:'Ophthalmology',time:'Yesterday 7:39'}]).map((v,i)=>(
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage />
+                        <AvatarFallback>{v.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{v.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{v.dept}</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">{v.time}</div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* AI Features Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px] mt-6">
@@ -332,7 +537,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
                   <HeartPulse className="h-5 w-5 text-primary" />
                   <CardTitle className="text-[18px] font-semibold leading-[1.1]">Messages</CardTitle>
                 </div>
-                <CardDescription className="text-[13px]">2 unread messages</CardDescription>
+                <CardDescription className="text-[13px]">{messageCount} unread messages</CardDescription>
               </CardHeader>
               <CardContent className="text-[13px] text-muted-foreground">Check updates from your doctor.</CardContent>
             </Card>
@@ -340,15 +545,73 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
         </div>
 
         {/* Right rail */}
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <CardContent className="flex items-center gap-4 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#2B63F7'}}></span> Consultation</div>
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#9FC6FF'}}></span> Medical Checkup</div>
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#E6F0FF'}}></span> Other</div>
+            </CardContent>
+          </Card>
+
           <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-[18px] font-semibold leading-[1.1]">Calendar</CardTitle>
-                <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                  <CalendarIcon className="h-4 w-4" />
+              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Avg Diagnose</CardTitle>
+              <CardDescription className="text-[13px]">Total Patients</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6">
+                <div className="w-[140px] h-[140px]">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={DIAGNOSE_DATA} dataKey="value" startAngle={90} endAngle={-270} innerRadius={48} outerRadius={70} paddingAngle={2} cornerRadius={6} onClick={(d:any) => onDiagnosisClick(d?.name)}>
+                        {DIAGNOSE_DATA.map((entry, index) => (
+                          <Cell key={`c-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="text-2xl font-semibold">640</div>
+                  {DIAGNOSE_DATA.map((d) => (
+                    <div key={d.name} className={`flex items-center gap-2 ${selectedDiagnosis===d.name ? 'font-semibold' : ''}`}>
+                      <span className="h-2 w-2 rounded-sm" style={{ background: d.color }} />
+                      <span>{d.value} {d.name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Latest Visits</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[{name:'Esther Howard',dept:'Dermatology',time:'Today 8:44'},{name:'Eleanor Pena',dept:'Gastroenterology',time:'Today 8:54'},{name:'Brooklyn Simmons',dept:'Ophthalmology',time:'Yesterday 7:39'}].map((v,i)=>(
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage />
+                      <AvatarFallback>{v.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{v.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{v.dept}</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{v.time}</div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Calendar</CardTitle>
             </CardHeader>
             <CardContent className="px-6 pt-2 pb-6">
               <div className="rounded-md w-full p-3">
@@ -359,58 +622,31 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Doctors</CardTitle>
-              <CardDescription className="text-[13px]">Available today</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {["Austin","María","Ava"].map((name, i) => (
-                <div key={name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage alt={`${name} avatar`} />
-                      <AvatarFallback>{name.substring(0,1)}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-[13px]">
-                      <div className="font-medium">Dr. {name}</div>
-                      <div className="text-muted-foreground">Cardiologist</div>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-success/10 text-success">A+</Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[18px] font-semibold leading-[1.1]">Details</CardTitle>
-              <CardDescription className="text-[13px]">Patient stats</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 text-[13px]">
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-muted-foreground">Blood Group</div>
-                <div className="font-semibold">A+</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-muted-foreground">Height</div>
-                <div className="font-semibold">172 cm</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-muted-foreground">Weight</div>
-                <div className="font-semibold">64 kg</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-muted-foreground">BMI</div>
-                <div className="font-semibold">21.6</div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      {/* Edit dialog for schedule items */}
+      <Dialog open={!!editing} onOpenChange={(o) => { if(!o) setEditing(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Appointment</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <div className="grid gap-3">
+              <label className="text-sm">Title</label>
+              <input value={editing.title} onChange={(e) => setEditing({...editing, title: e.target.value})} className="input bg-muted/10 p-2 rounded" />
+              <label className="text-sm">Start</label>
+              <input type="number" value={editing.start} onChange={(e) => setEditing({...editing, start: Number(e.target.value)})} className="input bg-muted/10 p-2 rounded" />
+              <label className="text-sm">End</label>
+              <input type="number" value={editing.end} onChange={(e) => setEditing({...editing, end: Number(e.target.value)})} className="input bg-muted/10 p-2 rounded" />
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
+                <Button onClick={saveEdit}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default PatientDashboard;
+}
