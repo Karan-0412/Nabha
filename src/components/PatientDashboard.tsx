@@ -88,6 +88,19 @@ const initialSchedule = [
   { id: 's3', title: 'Migraine Evaluation', start: 14, end: 15, avatars: ['KL'], color: '#F97316' },
 ];
 
+function Sparkline({ value }: { value: number }) {
+  const data = Array.from({ length: 8 }).map((_, i) => ({ x: i, y: Math.round(value * (0.75 + ((i % 4) * 0.06))) }));
+  return (
+    <div className="w-full h-10">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Line type="monotone" dataKey="y" stroke="#2B63F7" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function KpiCard({ item, active, onClick }: { item: typeof KPI_ITEMS[number]; active?: boolean; onClick: (id: string) => void }) {
   return (
     <div
@@ -95,13 +108,18 @@ function KpiCard({ item, active, onClick }: { item: typeof KPI_ITEMS[number]; ac
       onClick={() => onClick(item.id)}
       className={`rounded-[12px] bg-white p-4 shadow-[0_6px_18px_rgba(27,37,63,0.06)] cursor-pointer transition-transform ${active ? 'ring-2 ring-primary/30 scale-[1.01]' : ''}`}
     >
-      <div className="text-sm text-muted-foreground">{item.title}</div>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">{item.title}</div>
+        <div className={`text-sm font-medium ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
+      </div>
       <div className="mt-2 flex items-center justify-between">
         <div>
           <div className="text-2xl font-semibold">{item.value.toLocaleString()}</div>
           <div className="text-xs text-muted-foreground">Since last week</div>
         </div>
-        <div className={`text-sm font-medium ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
+        <div className="w-28 h-12">
+          <Sparkline value={item.value} />
+        </div>
       </div>
     </div>
   );
@@ -223,7 +241,15 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
       <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-[24px]">
         <div>
           <div className="flex items-center justify-between">
-            <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+            <div className="flex items-center gap-6">
+              <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant={overviewRange==='1y'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1y')}>1 Year</Button>
+                <Button variant={overviewRange==='6m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('6m')}>6 Months</Button>
+                <Button variant={overviewRange==='3m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('3m')}>3 Months</Button>
+                <Button variant={overviewRange==='1m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1m')}>1 Month</Button>
+              </div>
+            </div>
             <div className="hidden sm:flex items-center gap-2 text-[13px] text-muted-foreground">
               <CalendarIcon className="h-4 w-4" />
               {today}
@@ -246,12 +272,7 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                     <CardTitle className="text-[18px]">Overview</CardTitle>
                     <CardDescription>Avg per month</CardDescription>
                   </div>
-                  <div className="flex gap-2 text-xs">
-                    <Button variant={overviewRange==='1y'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1y')}>1 Year</Button>
-                    <Button variant={overviewRange==='6m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('6m')}>6 Months</Button>
-                    <Button variant={overviewRange==='3m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('3m')}>3 Months</Button>
-                    <Button variant={overviewRange==='1m'? 'secondary' : 'ghost'} size="sm" onClick={() => setOverviewRange('1m')}>1 Month</Button>
-                  </div>
+                  <div className="text-xs text-muted-foreground">&nbsp;</div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -421,6 +442,14 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
 
         {/* Right rail */}
         <div className="space-y-4">
+          <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <CardContent className="flex items-center gap-4 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#2B63F7'}}></span> Consultation</div>
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#9FC6FF'}}></span> Medical Checkup</div>
+              <div className="flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full" style={{background:'#E6F0FF'}}></span> Other</div>
+            </CardContent>
+          </Card>
+
           <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
             <CardHeader className="pb-2">
               <CardTitle className="text-[18px] font-semibold leading-[1.1]">Avg Diagnose</CardTitle>
