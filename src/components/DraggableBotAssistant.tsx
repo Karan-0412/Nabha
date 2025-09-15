@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import OpenAI from "openai";
 
 interface Message {
   id: string;
@@ -13,11 +12,6 @@ interface Message {
   text: string;
   timestamp: Date;
 }
-
-const client = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true, // ❌ Not safe for production
-});
 
 export function DraggableBotAssistant() {
   const [isOpen, setIsOpen] = useState(false);

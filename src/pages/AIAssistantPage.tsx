@@ -113,14 +113,14 @@ const AIAssistantPage = () => {
         
         // Add AI response after a short delay
         setTimeout(() => {
-          addMessage(selectedRoom, 'ai', aiResponse);
+          addMessage(selectedRoom, 'assistant', aiResponse);
           setMessages(getMessagesForRoom(selectedRoom));
           setIsTyping(false);
         }, 1000);
       } catch (error) {
         console.error('AI response error:', error);
         setTimeout(() => {
-          addMessage(selectedRoom, 'ai', 'I apologize, but I\'m having trouble processing your request right now. Please try again or consult with a healthcare professional.');
+          addMessage(selectedRoom, 'assistant', 'I apologize, but I\'m having trouble processing your request right now. Please try again or consult with a healthcare professional.');
           setMessages(getMessagesForRoom(selectedRoom));
           setIsTyping(false);
         }, 1000);
@@ -311,14 +311,14 @@ const AIAssistantPage = () => {
                     {messages.map((message) => (
                       <div key={message.id} className={`flex gap-3 ${message.sender === 'patient' || message.sender === 'doctor' ? 'flex-row-reverse' : 'flex-row'}`}>
                         <Avatar className="h-8 w-8">
-                          <AvatarFallback className={message.sender === 'ai' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-                            {message.sender === 'ai' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                          <AvatarFallback className={message.sender === 'assistant' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
+                            {message.sender === 'assistant' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                           </AvatarFallback>
                         </Avatar>
                         <div className={`flex flex-col max-w-[80%] ${message.sender === 'patient' || message.sender === 'doctor' ? 'items-end' : 'items-start'}`}>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-medium text-muted-foreground">
-                              {message.sender === 'ai' ? 'Dr. AI' : message.sender === 'patient' ? 'You' : 'Doctor'}
+                              {message.sender === 'assistant' ? 'Dr. AI' : message.sender === 'patient' ? 'You' : 'Doctor'}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {formatTime(message.timestamp)}
