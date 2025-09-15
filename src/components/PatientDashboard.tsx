@@ -116,11 +116,11 @@ function KpiCard({ item, active, onClick }: { item: typeof KPI_ITEMS[number]; ac
             <div className="text-xs text-muted-foreground">Since last week</div>
           </div>
         </div>
-        <div className="ml-4 flex items-center">
-          <div className={`text-sm font-medium mr-3 ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
-          <div className="w-24 h-12 rounded-md bg-muted/10 p-1 flex items-center">
+        <div className="ml-4 flex flex-col items-center">
+          <div className="w-28 h-12 rounded-md bg-muted/10 p-1 flex items-center">
             <Sparkline value={item.value} />
           </div>
+          <div className={`text-xs font-medium mt-2 ${item.delta >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{item.delta}%</div>
         </div>
       </div>
     </div>
