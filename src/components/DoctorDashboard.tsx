@@ -142,7 +142,7 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
           <div className="flex items-center justify-between">
             <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
             <div className="hidden sm:flex items-center gap-2 text-[13px] text-muted-foreground">
-              <Calendar className="h-4 w-4" />
+              <CalendarIcon className="h-4 w-4" />
               {today}
             </div>
           </div>
