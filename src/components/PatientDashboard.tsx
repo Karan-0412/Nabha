@@ -181,7 +181,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
           </div>
 
           {/* Activity card with chart */}
-          <Card className="mt-6 rounded-[16px] shadow-[var(--shadow-1,0_6px_18px_rgba(27,37,63,0.06))]">
+          <Card className="mt-6 rounded-[16px] border-0 shadow-[var(--shadow-1,0_6px_18px_rgba(27,37,63,0.06))]">
             <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
               <CardTitle className="text-[18px] font-semibold leading-[1.1]">Activity</CardTitle>
               <Tabs value={range} onValueChange={(v) => setRange(v)}>
@@ -229,7 +229,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
 
           {/* Lower info cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px] mt-6">
-            <Card className="rounded-[12px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <Gauge className="h-5 w-5 text-primary" />
@@ -242,7 +242,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[12px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <Droplets className="h-5 w-5 text-primary" />
@@ -256,7 +256,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[12px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+            <Card className="rounded-[12px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <HeartPulse className="h-5 w-5 text-primary" />
@@ -271,7 +271,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
 
         {/* Right rail */}
         <div className="space-y-6">
-          <Card className="rounded-[16px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-[18px] font-semibold leading-[1.1]">Calendar</CardTitle>
@@ -282,7 +282,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </div>
             </CardHeader>
             <CardContent className="px-6 pt-2 pb-6">
-              <div className="border rounded-md w-full p-3">
+              <div className="rounded-md w-full p-3">
                 <div className="flex pr-[10px] justify-center items-start">
                   <Calendar mode="single" numberOfMonths={1} selected={date} onSelect={setDate} className="rounded-md w-full max-w-none" />
                 </div>
@@ -290,7 +290,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[16px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
             <CardHeader className="pb-2">
               <CardTitle className="text-[18px] font-semibold leading-[1.1]">Doctors</CardTitle>
               <CardDescription className="text-[13px]">Available today</CardDescription>
@@ -314,7 +314,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[16px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+          <Card className="rounded-[16px] border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
             <CardHeader className="pb-2">
               <CardTitle className="text-[18px] font-semibold leading-[1.1]">Details</CardTitle>
               <CardDescription className="text-[13px]">Patient stats</CardDescription>
