@@ -360,45 +360,70 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
             </Card>
           </div>
 
-          {/* Today Schedule */}
-          <Card className="mt-4 border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-[18px]">Today Schedule</CardTitle>
-                <div className="text-xs text-muted-foreground">September {new Date().getFullYear()}</div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <div className="grid grid-cols-8 text-xs text-muted-foreground">
-                  {['06:00','08:00','10:00','12:00','14:00','16:00','18:00',''].map((t,i) => (
-                    <div key={i} className="h-6">{t}</div>
-                  ))}
+          {/* Today Schedule + Latest Visits side-by-side */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 mt-4">
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-[18px]">Today Schedule</CardTitle>
+                  <div className="text-xs text-muted-foreground">September {new Date().getFullYear()}</div>
                 </div>
-                <div className="relative h-[96px] rounded-md bg-muted/40 mt-2" onDrop={onDrop} onDragOver={onDragOver}>
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-blue-500/40" />
-                  {schedule.map(s => {
-                    const left = ((s.start - 6) / 12) * 100; // 6..18
-                    const width = ((s.end - s.start) / 12) * 100;
-                    return (
-                      <button
-                        key={s.id}
-                        draggable
-                        onDragStart={(e) => onDragStart(e, s.id)}
-                        onClick={() => openEdit(s.id)}
-                        className="absolute top-4 h-10 rounded-full shadow-sm text-white text-xs px-3 flex items-center gap-2"
-                        style={{ left: `${left}%`, width: `${Math.max(6, width)}%`, background: s.color }}
-                        aria-label={s.title}
-                      >
-                        <AvatarStack avatars={s.avatars} />
-                        <span className="truncate">{s.title}</span>
-                      </button>
-                    );
-                  })}
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <div className="grid grid-cols-8 text-xs text-muted-foreground">
+                    {['06:00','08:00','10:00','12:00','14:00','16:00','18:00',''].map((t,i) => (
+                      <div key={i} className="h-6">{t}</div>
+                    ))}
+                  </div>
+                  <div className="relative h-[96px] rounded-md bg-muted/40 mt-2" onDrop={onDrop} onDragOver={onDragOver}>
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-blue-500/40" />
+                    {schedule.map(s => {
+                      const left = ((s.start - 6) / 12) * 100; // 6..18
+                      const width = ((s.end - s.start) / 12) * 100;
+                      return (
+                        <button
+                          key={s.id}
+                          draggable
+                          onDragStart={(e) => onDragStart(e, s.id)}
+                          onClick={() => openEdit(s.id)}
+                          className="absolute top-4 h-10 rounded-full shadow-sm text-white text-xs px-3 flex items-center gap-2"
+                          style={{ left: `${left}%`, width: `${Math.max(6, width)}%`, background: s.color }}
+                          aria-label={s.title}
+                        >
+                          <AvatarStack avatars={s.avatars} />
+                          <span className="truncate">{s.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[18px] font-semibold leading-[1.1]">Latest Visits</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {([{name:'Esther Howard',dept:'Dermatology',time:'Today 8:44'},{name:'Eleanor Pena',dept:'Gastroenterology',time:'Today 8:54'},{name:'Brooklyn Simmons',dept:'Ophthalmology',time:'Yesterday 7:39'}]).map((v,i)=>(
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage />
+                        <AvatarFallback>{v.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{v.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{v.dept}</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">{v.time}</div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Lower info cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px] mt-6">
