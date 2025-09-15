@@ -38,16 +38,28 @@ const chartRows = [
   { x: 11, p: 670, s: 640 },
 ];
 
-const hexPattern = encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 86' opacity='0.08'>
+const hexPattern = encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 172'>
     <defs>
-      <pattern id='hex' width='17.32' height='30' patternUnits='userSpaceOnUse' patternTransform='scale(1)'>
-        <polygon points='8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5' fill='white'/>
+      <pattern id='hex' width='17.32' height='30' patternUnits='userSpaceOnUse'>
+        <polygon points='8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5'
+          fill='none' stroke='black' stroke-width='1.2' />
       </pattern>
     </defs>
-    <rect width='100%' height='100%' fill='url(#hex)'/>
-  </svg>`
-);
+    <rect width='100%' height='100%' fill='url(#hex)' opacity='0.08'/>
+  </svg>`);
+
+const noiseSvg = encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+    <filter id='n'>
+      <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>
+      <feColorMatrix type='saturate' values='0'/>
+      <feComponentTransfer>
+        <feFuncA type='table' tableValues='0 0.04'/>
+      </feComponentTransfer>
+    </filter>
+    <rect width='100%' height='100%' filter='url(#n)'/>
+  </svg>`);
 
 function StatCard({
   title,
@@ -68,9 +80,10 @@ function StatCard({
       <div
         className="relative rounded-[14px] p-4 md:p-5 min-h-[112px]"
         style={{
-          backgroundImage: `${gradient}, url("data:image/svg+xml;utf8,${hexPattern}")`,
-          backgroundBlendMode: "overlay",
-          backgroundSize: "cover, 180px",
+          backgroundImage: `${gradient}, radial-gradient(60% 60% at 50% 45%, rgba(43,99,247,0.06) 0%, rgba(43,99,247,0) 60%), url("data:image/svg+xml;utf8,${hexPattern}") , url("data:image/svg+xml;utf8,${noiseSvg}")`,
+          backgroundBlendMode: "normal, normal, overlay, soft-light",
+          backgroundSize: "cover, 100% 100%, 180px, 300px",
+          backgroundPosition: "0 0, 0 0, 0 0, 0 0",
           boxShadow: "inset 0 2px 6px rgba(255,255,255,0.6)",
         }}
       >
@@ -104,9 +117,7 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
     >
       {/* Top bar inside canvas */}
       <div className="px-[32px] pt-6">
-        <div className="flex items-center justify-between h-[72px]">
-          {/* Left spacer for logo area */}
-          <div className="w-[112px] shrink-0" />
+        <div className="flex justify-between h-[72px]">
           {/* Search pill */}
           <div className="hidden md:flex items-center w-[650px] h-[60px] max-w-full rounded-[22px] bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04),0_6px_18px_rgba(27,37,63,0.06)]">
             <Search className="h-4 w-4 ml-4 text-muted-foreground" />
@@ -126,7 +137,6 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
               </Avatar>
             </div>
           </div>
-          <div className="ml-auto" />
         </div>
       </div>
 
