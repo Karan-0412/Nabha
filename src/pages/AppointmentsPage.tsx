@@ -1,278 +1,470 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Calendar, Clock, User, Plus, Video, Phone, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Separator } from '@/components/ui/separator';
-import { useUserContext } from '@/context/user-role';
-import { Appointment, createAppointment, getAppointmentsForRole, isDoctorAvailableAt, onDBUpdate, acceptAppointment, rejectAppointment } from '@/store/telemedStore';
-import { ensureRoom } from '@/store/messageStore';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Calendar,
+  Clock,
+  User,
+  Plus,
+  Video,
+  Phone,
+  Search,
+  Trash2,
+  Pencil,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+interface Appointment {
+  id: string;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string;
+  department: string;
+  doctorName: string;
+  date: Date;
+  time: string;
+  type: "video" | "phone" | "in-person";
+  status: "confirmed" | "pending" | "cancelled";
+  duration: number;
+  message?: string;
+}
+
+const initialAppointments: Appointment[] = [
+  {
+    id: "1",
+    patientName: "John Smith",
+    patientEmail: "john@example.com",
+    patientPhone: "+1 (555) 123-4567",
+    department: "Cardiology",
+    doctorName: "Dr. Sarah Wilson",
+    date: new Date(),
+    time: "10:00 AM",
+    type: "video",
+    status: "confirmed",
+    duration: 30,
+    message: "Follow-up appointment.",
+  },
+  {
+    id: "2",
+    patientName: "Emily Johnson",
+    patientEmail: "emily@example.com",
+    patientPhone: "+1 (555) 987-6543",
+    department: "Dermatology",
+    doctorName: "Dr. Michael Brown",
+    date: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    time: "2:30 PM",
+    type: "video",
+    status: "pending",
+    duration: 45,
+    message: "New patient consultation.",
+  },
+  {
+    id: "3",
+    patientName: "Robert Davis",
+    patientEmail: "robert@example.com",
+    patientPhone: "+1 (555) 555-1234",
+    department: "Neurology",
+    doctorName: "Dr. Lisa Anderson",
+    date: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    time: "11:15 AM",
+    type: "phone",
+    status: "confirmed",
+    duration: 20,
+    message: "Medication review.",
+  },
+];
+
+const departments = [
+  "Cardiology",
+  "Dermatology",
+  "Neurology",
+  "Orthopedics",
+  "Pediatrics",
+];
 
 const doctors = [
-  { id: 'd1', name: 'Dr. Johnson' },
-  { id: 'd2', name: 'Dr. Smith' },
-  { id: 'd3', name: 'Dr. Lee' },
-];
-const patients = [
-  { id: 'p1', name: 'Jane Smith' },
-  { id: 'p2', name: 'John Doe' },
-  { id: 'p3', name: 'Sarah Johnson' },
+  {
+    name: "Dr. Sarah Wilson",
+    department: "Cardiology",
+    timings: ["10:00 AM", "11:00 AM", "02:00 PM"],
+  },
+  {
+    name: "Dr. Michael Brown",
+    department: "Dermatology",
+    timings: ["09:30 AM", "11:30 AM", "03:00 PM"],
+  },
+  {
+    name: "Dr. Lisa Anderson",
+    department: "Neurology",
+    timings: ["08:00 AM", "01:00 PM", "04:00 PM"],
+  },
+  {
+    name: "Dr. David Rodriguez",
+    department: "Orthopedics",
+    timings: ["09:00 AM", "10:30 AM", "02:30 PM"],
+  },
+  {
+    name: "Dr. Jessica Chen",
+    department: "Pediatrics",
+    timings: ["1:00 PM", "2:00 PM", "4:00 PM"],
+  },
 ];
 
 const AppointmentsPage = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const { userRole } = useUserContext();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState(initialAppointments);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const [openNew, setOpenNew] = useState(false);
-  const [newDateTime, setNewDateTime] = useState<string>(() => {
-    const now = new Date();
-    now.setHours(now.getHours() + 3);
-    const off = now.getTimezoneOffset();
-    return new Date(now.getTime() - off * 60000).toISOString().slice(0,16);
-  });
-  const [newDoctorId, setNewDoctorId] = useState<string>('d1');
-  const [newPatientId, setNewPatientId] = useState<string>('p1');
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] =
+    useState<Appointment | null>(null);
 
-  useEffect(() => {
-    const load = () => setAppointments(getAppointmentsForRole(userRole ?? 'patient'));
-    load();
-    return onDBUpdate(load);
-  }, [userRole]);
-
-  const createNewAppointment = () => {
-    const dt = new Date(newDateTime);
-    const doctor = doctors.find(d => d.id === newDoctorId)!;
-    const patient = patients.find(p => p.id === (userRole === 'patient' ? 'p1' : newPatientId))!;
-    if (!isDoctorAvailableAt(newDoctorId, dt)) {
-      alert(`${doctor.name} not available at the selected time`);
-      return;
-    }
-    createAppointment({
-      patientId: patient.id,
-      patientName: patient.name,
-      doctorId: doctor.id,
-      doctorName: doctor.name,
-      scheduledAt: dt.toISOString(),
-      status: 'confirmed',
-    });
-    setOpenNew(false);
-  };
+  // Form state for dropdowns
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [filteredDoctors, setFilteredDoctors] = useState<typeof doctors>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [availableTimings, setAvailableTimings] = useState<string[]>([]);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [appointmentType, setAppointmentType] =
+    useState<Appointment["type"]>("video");
+  const [patientName, setPatientName] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [appointmentMessage, setAppointmentMessage] = useState("");
 
   const getAppointmentIcon = (type: string) => {
     switch (type) {
-      case 'video':
-        return <Video className="h-4 w-4" />;
-      case 'phone':
-        return <Phone className="h-4 w-4" />;
+      case "video":
+        return <Video className="h-4 w-4 text-blue-500" />;
+      case "phone":
+        return <Phone className="h-4 w-4 text-purple-500" />;
       default:
-        return <User className="h-4 w-4" />;
+        return <User className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+      case "confirmed":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100";
     }
   };
 
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [rejectAptId, setRejectAptId] = useState<string | null>(null);
-
-  const openReject = (aptId: string) => {
-    setRejectAptId(aptId);
-    setRejectReason('');
-    setRejectOpen(true);
+  const handleOpenModal = (appointment: Appointment | null = null) => {
+    setEditingAppointment(appointment);
+    if (appointment) {
+      setPatientName(appointment.patientName);
+      setPatientEmail(appointment.patientEmail);
+      setPatientPhone(appointment.patientPhone);
+      setAppointmentDate(appointment.date);
+      setAppointmentType(appointment.type);
+      setSelectedDepartment(appointment.department);
+      setFilteredDoctors(
+        doctors.filter((d) => d.department === appointment.department)
+      );
+      setSelectedDoctor(appointment.doctorName);
+      const doctor = doctors.find((d) => d.name === appointment.doctorName);
+      setAvailableTimings(doctor?.timings || []);
+      setSelectedTime(appointment.time);
+      setAppointmentMessage(appointment.message || "");
+    } else {
+      setPatientName("");
+      setPatientEmail("");
+      setPatientPhone("");
+      setAppointmentDate(new Date());
+      setAppointmentType("video");
+      setSelectedDepartment("");
+      setFilteredDoctors([]);
+      setSelectedDoctor("");
+      setAvailableTimings([]);
+      setSelectedTime("");
+      setAppointmentMessage("");
+    }
+    setIsModalOpen(true);
   };
 
-  const confirmReject = () => {
-    if (!rejectAptId) return;
-    rejectAppointment(rejectAptId, rejectReason || undefined);
-    setRejectOpen(false);
-    setRejectAptId(null);
-    setRejectReason('');
+  const handleDepartmentSelect = (departmentName: string) => {
+    setSelectedDepartment(departmentName);
+    const filtered = doctors.filter((d) => d.department === departmentName);
+    setFilteredDoctors(filtered);
+    setSelectedDoctor("");
+    setAvailableTimings([]);
+    setSelectedTime("");
   };
 
-  const upcomingAppointments = appointments
-    .filter(apt => new Date(apt.scheduledAt) >= new Date())
-    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
+  const handleDoctorSelect = (doctorName: string) => {
+    setSelectedDoctor(doctorName);
+    const doctor = doctors.find((d) => d.name === doctorName);
+    setAvailableTimings(doctor?.timings || []);
+    setSelectedTime(doctor?.timings[0] || "");
+  };
+
+  const filteredAppointments = appointments.filter(
+    (apt) =>
+      (apt.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt.doctorName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (statusFilter === "all" || apt.status === statusFilter)
+  );
+
+  const upcomingAppointments = filteredAppointments
+    .filter((apt) => apt.date >= new Date())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 5);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newAppointment: Appointment = {
+      id: editingAppointment ? editingAppointment.id : String(Date.now()),
+      patientName: patientName,
+      patientEmail: patientEmail,
+      patientPhone: patientPhone,
+      department: selectedDepartment,
+      doctorName: selectedDoctor,
+      date: appointmentDate || new Date(),
+      time: selectedTime,
+      duration: 30, // Default duration, can be made dynamic
+      type: appointmentType,
+      status: editingAppointment ? editingAppointment.status : "pending",
+      message: appointmentMessage,
+    };
+
+    if (editingAppointment) {
+      setAppointments((prev) =>
+        prev.map((apt) =>
+          apt.id === editingAppointment.id ? newAppointment : apt
+        )
+      );
+    } else {
+      setAppointments((prev) => [...prev, newAppointment]);
+    }
+    setIsModalOpen(false);
+    setEditingAppointment(null);
+  };
+
+  const handleDelete = (id: string) => {
+    setAppointments((prev) => prev.filter((apt) => apt.id !== id));
+  };
+
+  const getAppointmentStatusForDate = (date: Date) => {
+    const dayAppointments = appointments.filter(
+      (apt) => apt.date.toDateString() === date.toDateString()
+    );
+    if (dayAppointments.some((apt) => apt.status === "pending")) {
+      return "pending";
+    }
+    if (dayAppointments.some((apt) => apt.status === "confirmed")) {
+      return "confirmed";
+    }
+    return null;
+  };
+
+  const dayStatusClasses = {
+    pending: "bg-yellow-500",
+    confirmed: "bg-green-500",
+  };
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('appointments')}</h1>
+          <h1 className="text-3xl font-bold text-foreground">Appointments</h1>
           <p className="text-muted-foreground mt-1">
             Manage your medical appointments and schedule new consultations
           </p>
         </div>
-        <Dialog open={openNew} onOpenChange={setOpenNew}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Appointment
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New Appointment</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4">
-              {userRole === 'doctor' && (
-                <div className="space-y-2">
-                  <Label>Patient</Label>
-                  <Select value={newPatientId} onValueChange={setNewPatientId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select patient" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patients.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Doctor</Label>
-                <Select value={newDoctorId} onValueChange={setNewDoctorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select doctor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map(d => {
-                      const dt = new Date(newDateTime);
-                      const available = isDoctorAvailableAt(d.id, dt);
-                      return (
-                        <SelectItem key={d.id} value={d.id} disabled={!available}>
-                          {d.name} {!available ? '— Not available' : ''}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date & Time</Label>
-                <Input type="datetime-local" value={newDateTime} onChange={(e) => setNewDateTime(e.target.value)} />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setOpenNew(false)}>Cancel</Button>
-                <Button onClick={createNewAppointment}>Create</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button className="gap-2" onClick={() => handleOpenModal()}>
+          <Plus className="h-4 w-4" />
+          New Appointment
+        </Button>
       </div>
 
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Appointment</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <Label>Reason (optional)</Label>
-            <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason for rejecting the appointment" />
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setRejectOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={confirmReject}>Reject</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Separator className="my-6" />
+
+      <div className="flex flex-col md:flex-row items-stretch gap-3">
+        <div className="flex-grow flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by patient or doctor..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full md:w-40">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator className="my-6" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-5 w-5 text-blue-500" />
               Calendar View
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center">
-              <CalendarComponent
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border"
-              />
-            </div>
-            {selectedDate && (
-              <div className="mt-6">
-                <h3 className="font-semibold mb-3">
-                  Appointments on {selectedDate.toDateString()}
-                </h3>
-                <div className="space-y-3">
-                  {appointments
-                    .filter(apt => new Date(apt.scheduledAt).toDateString() === selectedDate.toDateString())
-                    .map(appointment => (
-                      <div
-                        key={appointment.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          {getAppointmentIcon(appointment.type)}
-                          <div>
-                            <p className="font-medium">{appointment.patientName}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(appointment.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              {appointment.durationMinutes ? ` - ${appointment.durationMinutes}min` : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(appointment.status)}>
-                            {appointment.status}
-                          </Badge>
-                          {userRole === 'doctor' && (
-                            <>
-                              <Button variant="ghost" size="sm" onClick={() => {
-                                ensureRoom(`patient-${appointment.patientId}`, appointment.patientName, 'patient');
-                                navigate(`/chat?room=patient-${appointment.patientId}`);
-                              }}>
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                              {appointment.status === 'pending' && (
-                                <>
-                                  <Button className="bg-primary hover:bg-primary-hover" size="sm" onClick={() => acceptAppointment(appointment.id)}>Accept</Button>
-                                  <Button variant="destructive" size="sm" onClick={() => openReject(appointment.id)}>Reject</Button>
-                                </>
-                              )}
-                            </>
+            <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6">
+              <div className="flex justify-center flex-shrink-0">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                  components={{
+                    Day: ({ date }) => {
+                      const status = getAppointmentStatusForDate(date);
+                      const isSelected =
+                        selectedDate &&
+                        date.toDateString() === selectedDate.toDateString();
+                      return (
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            className={`h-9 w-9 p-0 font-normal rounded-full ${
+                              isSelected ? "bg-blue-500 text-white" : ""
+                            }`}
+                            onClick={() => setSelectedDate(date)}
+                          >
+                            {date.getDate()}
+                          </Button>
+                          {status && (
+                            <div
+                              className={`absolute top-1 right-1 h-1.5 w-1.5 rounded-full ${dayStatusClasses[status]}`}
+                            />
                           )}
                         </div>
-                      </div>
-                    ))}
-                </div>
+                      );
+                    },
+                  }}
+                />
               </div>
-            )}
+              {selectedDate && (
+                <div className="flex-grow">
+                  <h3 className="font-semibold mb-3">
+                    Appointments on {selectedDate.toDateString()}
+                  </h3>
+                  <div className="space-y-3">
+                    <TooltipProvider>
+                      {filteredAppointments
+                        .filter(
+                          (apt) =>
+                            apt.date.toDateString() ===
+                            selectedDate.toDateString()
+                        )
+                        .map((appointment) => (
+                          <Tooltip key={appointment.id}>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition">
+                                <div className="flex items-center gap-3">
+                                  {getAppointmentIcon(appointment.type)}
+                                  <div>
+                                    <p className="font-medium">
+                                      {appointment.patientName}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {appointment.time} • {appointment.duration}{" "}
+                                      min
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={getStatusColor(appointment.status)}>
+                                    {appointment.status}
+                                  </Badge>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      handleOpenModal(appointment);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleDelete(appointment.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs max-h-40 overflow-y-auto p-4">
+                              <p>{appointment.message}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                    </TooltipProvider>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              {t('upcomingAppointments')}
+              <Clock className="h-5 w-5 text-indigo-500" />
+              Upcoming Appointments
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -291,12 +483,15 @@ const AppointmentsPage = () => {
                         with {appointment.doctorName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(appointment.scheduledAt).toLocaleString()}
+                        {appointment.date.toLocaleDateString()} at{" "}
+                        {appointment.time}
                       </p>
                     </div>
                     <Badge
                       variant="outline"
-                      className={`text-xs ${getStatusColor(appointment.status)}`}
+                      className={`text-xs ${getStatusColor(
+                        appointment.status
+                      )}`}
                     >
                       {appointment.status}
                     </Badge>
@@ -306,6 +501,7 @@ const AppointmentsPage = () => {
                   )}
                 </div>
               ))}
+
               {upcomingAppointments.length === 0 && (
                 <p className="text-center text-muted-foreground text-sm py-8">
                   No upcoming appointments
@@ -316,52 +512,125 @@ const AppointmentsPage = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">12</p>
-                <p className="text-xs text-muted-foreground">This Month</p>
+      <Separator className="my-6" />
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingAppointment ? "Edit Appointment" : "Request Appointment"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="patientName">Name *</Label>
+                <Input
+                  id="patientName"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  placeholder="Patient Name"
+                  required
+                />
               </div>
-              <Calendar className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">3</p>
-                <p className="text-xs text-muted-foreground">This Week</p>
+              <div className="space-y-2">
+                <Label htmlFor="patientPhone">Phone *</Label>
+                <Input
+                  id="patientPhone"
+                  value={patientPhone}
+                  onChange={(e) => setPatientPhone(e.target.value)}
+                  placeholder="Phone"
+                  required
+                />
               </div>
-              <Clock className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">8</p>
-                <p className="text-xs text-muted-foreground">Video Calls</p>
+              <div className="space-y-2">
+                <Label htmlFor="patientEmail">Email *</Label>
+                <Input
+                  id="patientEmail"
+                  type="email"
+                  value={patientEmail}
+                  onChange={(e) => setPatientEmail(e.target.value)}
+                  placeholder="Email"
+                  required
+                />
               </div>
-              <Video className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">95%</p>
-                <p className="text-xs text-muted-foreground">Completion Rate</p>
+              <div className="space-y-2">
+                <Label htmlFor="appointmentDate">Date *</Label>
+                <Input
+                  id="appointmentDate"
+                  type="date"
+                  value={appointmentDate?.toISOString().split("T")[0] || ""}
+                  onChange={(e) =>
+                    setAppointmentDate(new Date(e.target.value))
+                  }
+                  required
+                />
               </div>
-              <User className="h-8 w-8 text-muted-foreground" />
+              <div className="space-y-2">
+                <Label htmlFor="department">Departments *</Label>
+                <Select
+                  name="department"
+                  value={selectedDepartment}
+                  onValueChange={handleDepartmentSelect}
+                >
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept} value={dept}>
+                        {dept}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctorName">Doctors *</Label>
+                <Select
+                  name="doctorName"
+                  value={selectedDoctor}
+                  onValueChange={handleDoctorSelect}
+                  disabled={!selectedDepartment}
+                >
+                  <SelectTrigger id="doctorName">
+                    <SelectValue placeholder="Select Doctor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredDoctors.length > 0 ? (
+                      filteredDoctors.map((doctor) => (
+                        <SelectItem key={doctor.name} value={doctor.name}>
+                          {doctor.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="placeholder" disabled>
+                        Select a department first
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="message">Message *</Label>
+                <Textarea
+                  id="message"
+                  value={appointmentMessage}
+                  onChange={(e) => setAppointmentMessage(e.target.value)}
+                  placeholder="Message"
+                  required
+                  rows={4}
+                />
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <DialogFooter>
+              <Button type="submit">
+                {editingAppointment ? "Update" : "Submit Now"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
