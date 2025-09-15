@@ -89,6 +89,7 @@ function Stat({ icon, label, value, delta, danger = false }: { icon: JSX.Element
 
 export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardProps) {
   const [range, setRange] = useState("y1");
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
   const today = useMemo(() => {
     const d = new Date();
