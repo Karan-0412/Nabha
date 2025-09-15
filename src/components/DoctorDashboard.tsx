@@ -136,7 +136,7 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
       </div>
 
       {/* Main grid */}
-      <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-[24px]">
+      <div className="px-[32px] pb-8 grid grid-cols-1 gap-[24px]">
         <div>
           {/* Header and tabs */}
           <div className="flex items-center justify-between">
