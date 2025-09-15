@@ -283,6 +283,7 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                           {overviewData.map((entry, idx) => (
                             <Cell key={idx} fill={entry.m === 'Jul' ? 'url(#julGrad)' : 'url(#hatched)'} stroke={entry.m === 'Jul' ? undefined : 'transparent'} />
                           ))}
+                        <LabelList dataKey="v" content={renderBarLabel} />
                         </Bar>
                         <Tooltip content={({ active, payload }) => {
                           if (!active || !payload || !payload.length) return null;
