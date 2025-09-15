@@ -143,8 +143,17 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
       {/* Main content grid: left (main) + right rail */}
       <div className="px-[32px] pb-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-[24px]">
         <div>
-          {/* Title */}
-          <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+          {/* Title with date on the right */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
+            <div className="hidden sm:flex items-center gap-2 text-[13px] text-muted-foreground">
+              <CalendarIcon className="h-4 w-4" />
+              {new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
+                .format(new Date())
+                .replace(/\./g, '')
+                .toLowerCase()}
+            </div>
+          </div>
 
           {/* Status cards with decorative background panel */}
           <div className="relative mt-6">
