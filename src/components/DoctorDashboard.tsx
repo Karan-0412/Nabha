@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Bar,
   BarChart,
@@ -16,7 +18,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Bell, Calendar, ChevronRight, Users, Activity, AlertTriangle, ClipboardList, Search } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, ChevronRight, Users, Activity, AlertTriangle, ClipboardList, Search } from "lucide-react";
 
 interface DoctorDashboardProps {
   onConnectPatient: (patientId: string) => void;
