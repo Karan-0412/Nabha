@@ -292,18 +292,6 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
         {/* Right rail */}
         <div className="space-y-4">
           {/* Right rail intentionally simplified; Latest Visits moved next to Today Schedule */}
-          <Card className="border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[18px]">Calendar</CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pt-2 pb-6">
-              <div className="rounded-md w-full p-3">
-                <div className="flex pr-[10px] justify-center items-start">
-                  <Calendar mode="single" numberOfMonths={1} selected={date} onSelect={setDate} className="rounded-md w-full max-w-none" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
