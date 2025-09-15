@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Bell, Calendar, ChevronRight, HeartPulse, Users, Activity, AlertTriangle, ClipboardList, Search } from "lucide-react";
+import { Bell, Calendar, ChevronRight, Users, Activity, AlertTriangle, ClipboardList, Search } from "lucide-react";
 
 interface DoctorDashboardProps {
   onConnectPatient: (patientId: string) => void;
