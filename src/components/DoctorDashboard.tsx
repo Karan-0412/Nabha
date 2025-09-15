@@ -158,10 +158,10 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
                     <CardDescription>Avg per month</CardDescription>
                   </div>
                   <div className="flex gap-2 text-xs">
-                    <Badge variant="secondary" className="rounded-full">1 Year</Badge>
-                    <Badge variant="outline" className="rounded-full">6 Months</Badge>
-                    <Badge variant="outline" className="rounded-full">3 Months</Badge>
-                    <Badge variant="outline" className="rounded-full">1 Month</Badge>
+                    <Button variant={range === 'y1' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setRange('y1')}>1 Year</Button>
+                    <Button variant={range === '6m' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setRange('6m')}>6 Months</Button>
+                    <Button variant={range === '3m' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setRange('3m')}>3 Months</Button>
+                    <Button variant={range === '1m' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setRange('1m')}>1 Month</Button>
                   </div>
                 </div>
               </CardHeader>
