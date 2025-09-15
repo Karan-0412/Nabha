@@ -68,6 +68,19 @@ const schedule = [
   { id: "p3", title: "Migraine Evaluation", start: 14, end: 15, avatars: ["KL"], color: "#F05252" },
 ];
 
+function Sparkline({ value }: { value: number }) {
+  const data = Array.from({ length: 8 }).map((_, i) => ({ x: i, y: Math.round(value * (0.6 + (i % 4) * 0.09)) }));
+  return (
+    <div className="w-[96px] h-10">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Line type="monotone" dataKey="y" stroke="#2B63F7" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function Stat({ icon, label, value, delta, danger = false }: { icon: JSX.Element; label: string; value: number; delta: number; danger?: boolean }) {
   const up = delta >= 0;
   return (
@@ -78,7 +91,12 @@ function Stat({ icon, label, value, delta, danger = false }: { icon: JSX.Element
             {icon}
             <span className="text-sm">{label}</span>
           </div>
-          <span className={`text-xs font-medium ${up ? "text-green-600" : "text-red-600"}`}>{Math.abs(delta).toFixed(2)}%</span>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-medium ${up ? "text-green-600" : "text-red-600"}`}>{Math.abs(delta).toFixed(2)}%</span>
+            <div className="w-[98px]">
+              <Sparkline value={value} />
+            </div>
+          </div>
         </div>
         <CardTitle className="text-2xl">{value.toLocaleString()}</CardTitle>
         <CardDescription>{up ? "Since last week" : "Since last week"}</CardDescription>
