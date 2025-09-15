@@ -74,7 +74,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="rounded-[16px] bg-white shadow-[0_6px_18px_rgba(27,37,63,0.06)] p-3"
+      className="rounded-[16px] bg-white border-0 shadow-[0_6px_18px_rgba(27,37,63,0.06)] p-3"
       aria-label={`${title} card`}
     >
       <div
@@ -131,9 +131,9 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
                 <Bell className="h-4 w-4 text-white" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-600" />
               </button>
-              <Avatar className="h-10 w-10 shadow-[0_6px_18px_rgba(27,37,63,0.06)]">
+              <Avatar className="h-10 w-10 border-0 ring-0 shadow-none bg-transparent">
                 <AvatarImage alt="Profile" />
-                <AvatarFallback className="h-[80%] w-[80%] m-auto">JD</AvatarFallback>
+                <AvatarFallback className="h-[80%] w-[80%] m-auto bg-transparent">JD</AvatarFallback>
               </Avatar>
             </div>
           </div>
