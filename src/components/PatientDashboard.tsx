@@ -286,7 +286,6 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
                 <CardTitle className="text-[18px] font-semibold leading-[1.1]">Calendar</CardTitle>
                 <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
                   <CalendarIcon className="h-4 w-4" />
-                  April 2023
                 </div>
               </div>
             </CardHeader>
