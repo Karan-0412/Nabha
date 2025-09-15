@@ -146,26 +146,38 @@ const PatientDashboard = ({ onRequestConsultation }: PatientDashboardProps) => {
           {/* Title */}
           <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-[#111827]">Dashboard</h1>
 
-          {/* Status cards */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
-            <StatCard
-              title="Heart Rate"
-              value="80 BPM"
-              icon={<HeartPulse className="h-5 w-5 text-blue-600" />}
-              gradient="radial-gradient(120%_120%at_0%_0%,#E8EEFF 0%,transparent 60%), linear-gradient(135deg,#E8EEFF 0%,#CFD8FF 100%)"
+          {/* Status cards with decorative background panel */}
+          <div className="relative mt-6">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-x-2 -inset-y-3 rounded-[18px] shadow-[0_6px_18px_rgba(27,37,63,0.06)]"
+              style={{
+                backgroundImage: `linear-gradient(135deg,#F7FBFF 0%, #EEF4FF 100%), radial-gradient(60% 60% at 20% 10%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%), url("data:image/svg+xml;utf8,${hexPattern}"), url("data:image/svg+xml;utf8,${noiseSvg}")`,
+                backgroundBlendMode: "normal, screen, overlay, soft-light",
+                backgroundSize: "cover, 100% 100%, 200px, 300px",
+                backgroundPosition: "0 0, 0 0, 0 0, 0 0",
+              }}
             />
-            <StatCard
-              title="Blood Pressure"
-              value="120/80 mmHG"
-              icon={<Gauge className="h-5 w-5 text-cyan-600" />}
-              gradient="radial-gradient(120%_120%at_0%_0%,#E7F9FF 0%,transparent 60%), linear-gradient(135deg,#E7F9FF 0%,#DFF7FF 100%)"
-            />
-            <StatCard
-              title="Glucose Level"
-              value="60 - 80 mg/dl"
-              icon={<Droplets className="h-5 w-5 text-pink-600" />}
-              gradient="radial-gradient(120%_120%at_0%_0%,#FFF0FB 0%,transparent 60%), linear-gradient(135deg,#FFF0FB 0%,#F6D9F9 100%)"
-            />
+            <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+              <StatCard
+                title="Heart Rate"
+                value="80 BPM"
+                icon={<HeartPulse className="h-5 w-5 text-blue-600" />}
+                gradient="radial-gradient(120%_120%at_0%_0%,#E8EEFF 0%,transparent 60%), linear-gradient(135deg,#E8EEFF 0%,#CFD8FF 100%)"
+              />
+              <StatCard
+                title="Blood Pressure"
+                value="120/80 mmHG"
+                icon={<Gauge className="h-5 w-5 text-cyan-600" />}
+                gradient="radial-gradient(120%_120%at_0%_0%,#E7F9FF 0%,transparent 60%), linear-gradient(135deg,#E7F9FF 0%,#DFF7FF 100%)"
+              />
+              <StatCard
+                title="Glucose Level"
+                value="60 - 80 mg/dl"
+                icon={<Droplets className="h-5 w-5 text-pink-600" />}
+                gradient="radial-gradient(120%_120%at_0%_0%,#FFF0FB 0%,transparent 60%), linear-gradient(135deg,#FFF0FB 0%,#F6D9F9 100%)"
+              />
+            </div>
           </div>
 
           {/* Activity card with chart */}
