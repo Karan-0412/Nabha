@@ -289,10 +289,6 @@ export default function DoctorDashboard({ onConnectPatient }: DoctorDashboardPro
           </Card>
         </div>
 
-        {/* Right rail */}
-        <div className="space-y-4">
-          {/* Right rail intentionally simplified; Latest Visits moved next to Today Schedule */}
-        </div>
       </div>
     </div>
   );
