@@ -262,7 +262,7 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
                     <div className="mt-4 text-sm text-muted-foreground">July 2024</div>
                     <div className="text-xl font-medium">$47,500</div>
                   </div>
-                  <div className="h-[240px]">
+                  <div className="h-[240px]" style={{backgroundImage: `url("data:image/svg+xml;utf8,${hexPattern}"), url("data:image/svg+xml;utf8,${noiseSvg}")`, backgroundBlendMode: 'overlay,soft-light', backgroundSize: '180px, 300px', backgroundPosition: '0 0'}}>
                     <ResponsiveContainer>
                       <BarChart data={overviewData} barSize={22} margin={{ left: 8, right: 8, top: 10, bottom: 0 }}>
                         <defs>
