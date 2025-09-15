@@ -161,6 +161,19 @@ export default function PatientDashboard({ onRequestConsultation }: PatientDashb
     setSelectedDiagnosis((s) => (s === name ? null : name));
   };
 
+  // custom label renderer for July bar
+  const renderBarLabel = (props: any) => {
+    const { x, y, value, index } = props;
+    if (!overviewData || !overviewData[index] || overviewData[index].m !== 'Jul') return null;
+    // draw a white rounded label above the bar
+    return (
+      <g>
+        <rect x={x - 36} y={y - 34} rx={10} ry={10} width={72} height={24} fill="#ffffff" opacity={1} />
+        <text x={x} y={y - 18} fill="#111827" fontSize={12} fontWeight={700} textAnchor="middle">${overviewData[index].v.toLocaleString()}</text>
+      </g>
+    );
+  };
+
   // drag/drop handlers for schedule
   const onDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData('text/plain', id);
